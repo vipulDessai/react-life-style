@@ -1,9 +1,9 @@
-# React life style
+# React life style ![Check Build](https://github.com/vipulDessai/react-life-style/workflows/Check%20Build/badge.svg)
 
-This repo is for investigating the how the component comes to a life and we will observe what leads the component to victory and unlimately a glorified death
+This repository is actually to demonstrate the react components life cycles, Pokemons are for abstraction, so we will investigating how the pokemon comes to life and we will observe what leads the pokemon to victory and ultimately a glorified death
 
 ## In parellel universe
-The component is born is 3 different universes
+The pokemons are born in 3 different universes
+- Props
 - Redux
 - Context
-- First Ones
