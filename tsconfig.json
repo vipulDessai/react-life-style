@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+      "jsx": "react",
+      "noImplicitAny": true,
+      "esModuleInterop": true,
+      "outDir": "./build/",
+      "sourceMap": true,
+      "target": "es5",
+      "module": "es6",
+      "moduleResolution": "node",
+      "baseUrl": "./src",
+      "paths": {
+        "@/*": ["./*"]
+      },
+      "allowJs": true
+    }
+  }
+  
