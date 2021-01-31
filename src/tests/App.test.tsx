@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-import { App } from '@/Universe-Props/_class';
+import { App } from '@/App';
 
 // svg icons
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -16,8 +16,8 @@ describe('Render', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /app/i
+        name: /pokemon/i
       })
-    ).toHaveTextContent('App');
+    ).toHaveTextContent('Pokemon');
   });
 });

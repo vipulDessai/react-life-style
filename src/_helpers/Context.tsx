@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 
-export class Galaxy extends Component {
+export class Context extends Component {
     render() {
         return (
-            <li>Galaxy</li>
+            <p>Context</p>
         );
     }
 }
