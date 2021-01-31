@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
 
-import { Context, Props } from '@/_helpers';
+import './App.scss';
+import { Context, PropsComponent } from '@/_helpers';
 
 export class App extends Component {
     render() {
@@ -20,7 +21,7 @@ export class App extends Component {
                 </header>
                 <Switch>
                     <Route path="/context" component={Context}></Route>
-                    <Route path="/props" component={Props}></Route>
+                    <Route path="/props" component={PropsComponent}></Route>
                 </Switch>
                 <footer></footer>
             </BrowserRouter>
