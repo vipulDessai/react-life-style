@@ -16,8 +16,8 @@ describe('Render', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /app/i
+        name: /pokemon/i
       })
-    ).toHaveTextContent('App');
+    ).toHaveTextContent('Pokemon');
   });
 });
