@@ -100,6 +100,7 @@ export class PropsComponent extends Component<PropsType, StateType> {
     }
 
     render() {
+        console.log('universe rendered!!');
         return (
             <section>
                 {

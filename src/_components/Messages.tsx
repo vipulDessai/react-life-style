@@ -18,6 +18,7 @@ export class Messages extends Component<PropsType> {
     }
 
     render() {
+        console.log('messages rendered!!');
         return (
             <ul>
                 {
