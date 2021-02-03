@@ -2,11 +2,8 @@ import React, { Component } from 'react';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
+import { GalaxyType } from '@/_types';
 
-interface GalaxyType {
-    id: number,
-    darkStoneQty: number,
-}
 
 interface PropsType {
 
@@ -16,6 +13,10 @@ interface StateType {
     darknessReady: boolean,
     messages: string[],
     galaxies: GalaxyType[],
+}
+
+interface SnapShotType {
+    message: string,
 }
 
 let timerPointer: NodeJS.Timer = null;
@@ -37,9 +38,17 @@ export class PropsComponent extends Component<PropsType, StateType> {
         console.log('Universe Instantiated!!');
     }
 
-    componentDidUpdate(prevProps: PropsType, prevStates: StateType) {
-        console.log('Universe Updated!!');
+    getSnapshotBeforeUpdate(prevProps: PropsType, prevStates: StateType) {
+        console.log('Universe is about to be Updated!!');
 
+        return { message: 'this is a snap before update' };
+    }
+
+    componentDidUpdate(prevProps: PropsType, prevStates: StateType, snapshot: SnapShotType) {
+        snapshot && console.log(`snapshot message - ${snapshot.message}`);
+        
+        console.log('Universe Updated!!');
+        
         if(this.state.messages.length > 0) {
             clearTimeout(timerPointer);
             timerPointer = setTimeout(() => {
@@ -112,7 +121,7 @@ export class PropsComponent extends Component<PropsType, StateType> {
                 </ul>
                 <ul>
                     {
-                        this.state.galaxies.map(galaxy => <Galaxy key={galaxy.id} destroyGalaxy={this.destroyGalaxy} />)
+                        this.state.galaxies.map(galaxy => <Galaxy key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
                     }
                 </ul>
             </section>

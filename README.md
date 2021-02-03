@@ -10,3 +10,6 @@ The pokemons are born in 3 different universes
 
 ## Live
 For live website, click [here](https://react-life-style.herokuapp.com/)
+
+# TODO
+- add react beautiful drag and drop
