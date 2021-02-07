@@ -1,2 +1,2 @@
-export * from './Context';
-export * from './Props';
+export * from './context';
+export * from './store';

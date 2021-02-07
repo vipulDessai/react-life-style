@@ -1,18 +1,14 @@
 import React, { Component } from 'react';
-import axios from 'axios';
+import { PokemonType } from '@/_types';
 
-export class Pokemon extends Component {
-    getAllPokemon = async () => {
-        const pokemonData = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=50');
-        if(pokemonData.status == 200) {
+interface PropsType {
+    pokemon: PokemonType,
+}
 
-        }
-        else {
-            console.log(pokemonData.data.error);
-        }
-    } 
-
-    componentDidMount() {
-        this.getAllPokemon();
+export class Pokemon extends Component<PropsType> {
+    render() {
+        return (
+            <li>Pokemon - {this.props.pokemon.name}</li>
+        );
     }
 }
