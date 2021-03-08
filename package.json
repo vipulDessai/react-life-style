@@ -45,7 +45,7 @@
     "dev": "webpack-dev-server --port 4200",
     "build": "webpack --mode production",
     "test": "jest",
-    "test-w": "jest --watch",
+    "dev-t": "jest --watch",
     "lint": "esw --ext .js,.jsx,.ts,.tsx .",
     "fix": "eslint --fix --ext .js,.jsx,.ts,.tsx ."
   },
