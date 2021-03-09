@@ -1,3 +1,5 @@
+import { KarmaStateType } from '@/_types';
+
 enum KarmaType {
     INIT = 'init',
     DEC = 'dec',
@@ -5,10 +7,6 @@ enum KarmaType {
 
 interface ActionType {
     type: string,
-}
-
-interface KarmaStateType {
-    qty: number,
 }
 
 export function karma(state: KarmaStateType = {qty: 0}, action: ActionType) {

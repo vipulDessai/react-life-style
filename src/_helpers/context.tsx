@@ -3,6 +3,7 @@ import React, {Component, createContext} from 'react';
 export const MultiverseContext = createContext({
     createEnergy: () => {},
     consumeEnergy: () => {},
+    energy: -1,
 });
 
 export class MultiverseContextProvider extends Component {
