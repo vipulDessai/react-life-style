@@ -2,16 +2,18 @@ import React, { Component } from 'react';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
-import { GalaxyType } from '@/_types';
+import { GalaxyType, MessagesActionType } from '@/_types';
+import { connect } from 'react-redux';
+import { RootState } from '@/_reducer';
 
 
 interface PropsType {
-
+    messages?: string[],
+    messageDispatcher?: any
 }
 
 interface StateType {
     darknessReady: boolean,
-    messages: string[],
     galaxies: GalaxyType[],
 }
 
@@ -21,12 +23,11 @@ interface SnapShotType {
 
 let timerPointer: NodeJS.Timer = null;
 
-export class Universe extends Component<PropsType, StateType> {
-    constructor(props: {}) {
+export class UniverseComponent extends Component<PropsType, StateType> {
+    constructor(props: PropsType) {
         super(props);
         this.state = {
             darknessReady: true,
-            messages: [],
             galaxies: [{
                 id: 1,
                 darkStoneQty: 0,
@@ -49,10 +50,10 @@ export class Universe extends Component<PropsType, StateType> {
         
         console.log('Universe Updated!!');
         
-        if(this.state.messages.length > 0) {
+        if(this.props.messages.length > 0) {
             clearTimeout(timerPointer);
             timerPointer = setTimeout(() => {
-                this.setState({ messages: [] });
+                this.props.messageDispatcher({type: MessagesActionType.DELETE});
             }, 5000);
         }
     }
@@ -60,7 +61,6 @@ export class Universe extends Component<PropsType, StateType> {
     createGalaxy = () => {
         const galaxies = [...this.state.galaxies];
         let darknessReady = this.state.darknessReady;
-        const messages = [...this.state.messages];
 
         // if dark stone is available, consume it
         if(darknessReady) {
@@ -70,13 +70,13 @@ export class Universe extends Component<PropsType, StateType> {
             });
 
             darknessReady = false;
-            messages.push('Darkness consumed!!');
+            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Darkness consumed!!'});
         }
         else {
-            messages.push('Not enough darkness!!');
+            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Not enough darkness!!'});
         }
 
-        this.setState({ darknessReady, messages, galaxies });
+        this.setState({ darknessReady, galaxies });
     }
 
     destroyGalaxy = (galaxyId: number) => {
@@ -95,17 +95,16 @@ export class Universe extends Component<PropsType, StateType> {
     }
 
     createDarkness = () => {
-        const messages = [...this.state.messages];
         let darknessReady = this.state.darknessReady;
         if(!darknessReady) {
             darknessReady = true;
-            messages.push('Darkness is spreading!!');
+            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Darkness is spreading!!'});
         }
         else {
-            messages.push('Please comsume the existing darkness!!');
+            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Please comsume the existing darkness!!'});
         }
 
-        this.setState({ darknessReady, messages });
+        this.setState({ darknessReady });
     }
 
     render() {
@@ -113,7 +112,7 @@ export class Universe extends Component<PropsType, StateType> {
         return (
             <section>
                 {
-                    this.state.messages.length > 0 && <Messages messages={this.state.messages}></Messages>
+                    this.props.messages && this.props.messages.length > 0 && <Messages messages={this.props.messages}></Messages>
                 }
                 <ul>
                     <li><button onClick={this.createGalaxy}>Create Galaxy</button></li>
@@ -128,3 +127,12 @@ export class Universe extends Component<PropsType, StateType> {
         );
     }
 }
+
+const mapStateToProps = (state: RootState) => {
+    return { messages: state.Messages.messages };
+};
+const mapDispatchToProps = (dispatch: any) => {
+    return { messageDispatcher: dispatch };
+};
+
+export const Universe = connect(mapStateToProps, mapDispatchToProps)(UniverseComponent);

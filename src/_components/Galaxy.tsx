@@ -18,7 +18,7 @@ export class Galaxy extends Component<PropsType, StateType> {
         super(props);
 
         this.state = {
-            id: props.galaxy.id,
+            id: null,
             planets: []
         };
     }
@@ -32,7 +32,8 @@ export class Galaxy extends Component<PropsType, StateType> {
         console.log('get the derived state from props');
 
         return {
-            planets: [{id: 0, food:0}],
+            id: props.galaxy.id,
+            planets: [{ id: 0, food: 0 }],
         };
     }
 
@@ -45,17 +46,21 @@ export class Galaxy extends Component<PropsType, StateType> {
             <MultiverseContext.Consumer>
                 {
                     context => {
-                        const {createEnergy, consumeEnergy, energy } = context;
+                        const {createEnergy, consumeEnergyCreatePlanet, energy } = context;
 
                         return (
                             <li>
                                 <ul>
-                                    <li>Galaxy - {this.state.id} has {energy} energy <button onClick={createEnergy}>Create Energy</button></li>
-                                    {
-                                        this.state.planets.map(
-                                            planet => <Planet key={planet.id} planet={planet}></Planet>
-                                        )
-                                    }
+                                    <li>Galaxy - {this.state.id} has {energy} energy <button onClick={createEnergy}>Create Energy</button><button onClick={consumeEnergyCreatePlanet}>Create Planet</button></li>
+                                    <li>
+                                        <ul>
+                                            {
+                                                this.state.planets.map(
+                                                    planet => <Planet key={planet.id} planet={planet}></Planet>
+                                                )
+                                            }
+                                        </ul>
+                                    </li>
                                 </ul>
                             </li>
                         );

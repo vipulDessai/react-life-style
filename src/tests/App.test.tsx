@@ -18,6 +18,9 @@ describe('Render', () => {
     const appInitialState = {
       karma: {
         qty: 0,
+      },
+      Messages: {
+        
       }
     };
     const store = mockStore(appInitialState);

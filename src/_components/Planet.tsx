@@ -23,6 +23,9 @@ class PlanetComponent extends Component<PropsType, StateType> {
             pokemons: [],
         };
     }
+    componentDidMount() {
+        this.getAllPokemon();
+    }
 
     getAllPokemon = async () => {
         const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
@@ -34,25 +37,24 @@ class PlanetComponent extends Component<PropsType, StateType> {
             console.log(response);
         }
     } 
-
-    componentDidMount() {
-        this.getAllPokemon();
+    createRandomPokemon = () => {
+        // creates pokemon from fetched pokemons
     }
 
     render() {
         return (
-            <ul>
+            <>
                 <li><p>Planet food: {this.props.planet.food} karma - {this.props.karma.qty}</p></li>
                 <li>
                     <ul>
                         {
                             this.state.pokemons.map(
-                                pokemon => <Pokemon key={pokemon.id} pokemon={pokemon} />
+                                pokemon => <Pokemon key={pokemon.name} pokemon={pokemon} />
                             )
                         }
                     </ul>
                 </li>
-            </ul>
+            </>
         );
     }
 }
