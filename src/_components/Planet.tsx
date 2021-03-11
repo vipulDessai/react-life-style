@@ -11,7 +11,8 @@ interface PropsType {
 }
 
 interface StateType {
-    pokemons: PokemonType[],
+    allPokemons: PokemonType[],
+    currentPokemons: PokemonType[],
 }
 
 class PlanetComponent extends Component<PropsType, StateType> {
@@ -19,7 +20,8 @@ class PlanetComponent extends Component<PropsType, StateType> {
         super(props);
 
         this.state = {
-            pokemons: [],
+            allPokemons: [],
+            currentPokemons: [],
         };
     }
     componentDidMount() {
@@ -29,25 +31,28 @@ class PlanetComponent extends Component<PropsType, StateType> {
     getAllPokemon = async () => {
         const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
         if(response.status == 200) {
-            const pokemons = response.data.results;
-            this.setState({pokemons});
+            const allPokemons = response.data.results;
+            this.setState({allPokemons});
         }
         else {
             console.log(response);
         }
     } 
     createRandomPokemon = () => {
-        // creates pokemon from fetched pokemons
+        const addPokemonsList = [...this.state.currentPokemons];
+        const randomIndex = Math.floor(Math.random() * this.state.allPokemons.length);
+        addPokemonsList.push(this.state.allPokemons[randomIndex]);
+        this.setState({currentPokemons: addPokemonsList});
     }
 
     render() {
         return (
             <>
-                <li><p>Planet food: {this.props.planet.food} Pokemons - {this.state.pokemons.length}</p></li>
+                <li>Planet - {this.props.planet.id} Pokemons - {this.state.currentPokemons.length} <button onClick={this.createRandomPokemon}>Create Pokemons</button></li>
                 <li>
                     <ul>
                         {
-                            this.state.pokemons.map(
+                            this.state.currentPokemons.map(
                                 pokemon => <Pokemon key={pokemon.name} pokemon={pokemon} />
                             )
                         }
@@ -62,9 +67,12 @@ let unifiedPlanet;
 
 if(window.location.href.indexOf('reducer') > -1) {
     const mapStateToProps = (state: RootState) => {
-        return { energy: state.Energy };
+        return { darkStone: state.DarkStone };
     };
-    unifiedPlanet = connect(mapStateToProps)(PlanetComponent);
+    const mapDispatchToProps = (dispatch: any) => {
+        return { dispatch };
+    };
+    unifiedPlanet = connect(mapStateToProps, mapDispatchToProps)(PlanetComponent);
 }
 else {
     unifiedPlanet = PlanetComponent;

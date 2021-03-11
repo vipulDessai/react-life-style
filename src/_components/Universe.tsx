@@ -1,19 +1,19 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
-import { GalaxyType, MessagesActionType } from '@/_types';
-import { connect } from 'react-redux';
+import { GalaxyType, MessagesActionType, DarkStoneType, DarkStoneActionType } from '@/_types';
 import { RootState } from '@/_reducer';
-
+import { MultiverseContext } from '@/_context';
 
 interface PropsType {
     messages?: string[],
-    messageDispatcher?: any
+    darkStone?: DarkStoneType,
+    dispatch?: any
 }
 
 interface StateType {
-    darknessReady: boolean,
     galaxies: GalaxyType[],
 }
 
@@ -21,16 +21,23 @@ interface SnapShotType {
     message: string,
 }
 
+enum UniverseActions {
+    CREATE_GALAXY = 'CREATE_GALAXY',
+    CREATE_DARKSTONE = 'CREATE_DARKSTONE',
+    ADD_MESSAGE = 'ADD_MESSAGE',
+    DELETE_ALL_MESSAGES = 'DELETE_ALL_MESSAGES',
+}
+
 let timerPointer: NodeJS.Timer = null;
 
 export class UniverseComponent extends Component<PropsType, StateType> {
+    static context = MultiverseContext;
+
     constructor(props: PropsType) {
         super(props);
         this.state = {
-            darknessReady: true,
             galaxies: [{
                 id: 1,
-                darkStoneQty: 0,
             }]
         };
     }
@@ -53,32 +60,30 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         if(this.props.messages.length > 0) {
             clearTimeout(timerPointer);
             timerPointer = setTimeout(() => {
-                this.props.messageDispatcher({type: MessagesActionType.DELETE});
+                this.dispatcher(UniverseActions.DELETE_ALL_MESSAGES);
             }, 5000);
         }
     }
 
     createGalaxy = () => {
         const galaxies = [...this.state.galaxies];
-        let darknessReady = this.state.darknessReady;
+        const darknessReady = this.props.darkStone.ready;
 
         // if dark stone is available, consume it
         if(darknessReady) {
             galaxies.push({
                 id: galaxies.length + 1,
-                darkStoneQty: 0,
             });
 
-            darknessReady = false;
-            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Darkness consumed!!'});
+            this.dispatcher(UniverseActions.CREATE_GALAXY);
+            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Darkness consumed!!');
         }
         else {
-            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Not enough darkness!!'});
+            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Not enough darkness!!');
         }
 
-        this.setState({ darknessReady, galaxies });
+        this.setState({ galaxies });
     }
-
     destroyGalaxy = (galaxyId: number) => {
         let galaxies = [...this.state.galaxies];
         galaxies = galaxies.filter(
@@ -93,18 +98,49 @@ export class UniverseComponent extends Component<PropsType, StateType> {
 
         this.setState({ galaxies });
     }
-
     createDarkness = () => {
-        let darknessReady = this.state.darknessReady;
+        let darknessReady = this.props.darkStone.ready;
         if(!darknessReady) {
-            darknessReady = true;
-            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Darkness is spreading!!'});
+            this.dispatcher(UniverseActions.CREATE_DARKSTONE);
+            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Darkness is spreading!!');
         }
         else {
-            this.props.messageDispatcher({type: MessagesActionType.ADD, messageText: 'Please comsume the existing darkness!!'});
+            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Please comsume the existing darkness!!');
+        }
+    }
+
+    dispatcher = (type: string, messageText?: string) => {
+        let dipatchType = '';
+        switch (type) {
+            case UniverseActions.CREATE_GALAXY:
+                dipatchType = DarkStoneActionType.CONSUME;
+                break;
+
+            case UniverseActions.CREATE_DARKSTONE:
+                dipatchType = DarkStoneActionType.CREATE;
+                break;
+            
+            case UniverseActions.ADD_MESSAGE:
+                dipatchType = MessagesActionType.ADD;
+                break;
+            
+            case UniverseActions.DELETE_ALL_MESSAGES:
+                dipatchType = MessagesActionType.DELETE;
+                break;
+        
+            default:
+                break;
         }
 
-        this.setState({ darknessReady });
+        // context
+        // TODO: check if context is available properly
+        if(this.context.foo) {
+            
+        }
+        // reducer
+        else {
+            this.props.dispatch({type: dipatchType, messageText});
+        }
     }
 
     render() {
@@ -119,9 +155,9 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                     <li><button onClick={this.createDarkness}>Create Darkness</button></li>
                 </ul>
                 <ul>
-                    {
-                        this.state.galaxies.map(galaxy => <Galaxy key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
-                    }
+                {
+                    this.state.galaxies.map(galaxy => <Galaxy key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
+                }
                 </ul>
             </section>
         );
@@ -133,10 +169,13 @@ export class UniverseComponent extends Component<PropsType, StateType> {
 let unifiedUniverse;
 if(window.location.href.indexOf('reducer') > -1) {
     const mapStateToProps = (state: RootState) => {
-        return { messages: state.Messages.messages };
+        return { 
+            messages: state.Messages.messages,
+            darkStone: state.DarkStone,
+        };
     };
     const mapDispatchToProps = (dispatch: any) => {
-        return { messageDispatcher: dispatch };
+        return { dispatch };
     };
     
     unifiedUniverse = connect(mapStateToProps, mapDispatchToProps)(UniverseComponent);

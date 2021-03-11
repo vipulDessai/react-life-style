@@ -1,10 +1,10 @@
 import { combineReducers } from 'redux';
 
-import { Energy } from './energy.reducer';
+import { DarkStone } from './darkStone.reducer';
 import { Messages } from './messages.reducer';
 
 export const rootReducer = combineReducers({
-    Energy,
+    DarkStone,
     Messages,
 });
 
