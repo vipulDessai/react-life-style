@@ -1,4 +1,4 @@
-import { MultiverseContext } from '@/_helpers';
+import { MultiverseContext } from '@/_context';
 import { GalaxyType, PlanetType } from '@/_types';
 import React, { Component } from 'react';
 import { Planet } from './Planet';
@@ -14,6 +14,8 @@ interface StateType {
 }
 
 export class Galaxy extends Component<PropsType, StateType> {
+    static context = MultiverseContext;
+
     constructor(props: PropsType) {
         super(props);
 
@@ -24,7 +26,7 @@ export class Galaxy extends Component<PropsType, StateType> {
     }
 
     shouldComponentUpdate(nextProps: PropsType, nextState: StateType):boolean {
-        // as of now allow update
+        // as of now allow update irrespectively
         return true;
     }
 
@@ -41,32 +43,30 @@ export class Galaxy extends Component<PropsType, StateType> {
         console.log(`galaxy updated!! - planet count - ${prevState.planets.length}`);
     }
 
-    render() {
-        return (
-            <MultiverseContext.Consumer>
-                {
-                    context => {
-                        const {createEnergy, consumeEnergyCreatePlanet, energy } = context;
+    createEnergy = () => {
+        const { createEnergy } = this.context;
+    }
+    consumeEnergyCreatePlanet = () => {
+        const { consumeEnergyCreatePlanet } = this.context;
+    }
 
-                        return (
-                            <li>
-                                <ul>
-                                    <li>Galaxy - {this.state.id} has {energy} energy <button onClick={createEnergy}>Create Energy</button><button onClick={consumeEnergyCreatePlanet}>Create Planet</button></li>
-                                    <li>
-                                        <ul>
-                                            {
-                                                this.state.planets.map(
-                                                    planet => <Planet key={planet.id} planet={planet}></Planet>
-                                                )
-                                            }
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-                        );
-                    }
-                }
-            </MultiverseContext.Consumer>
+    render() {
+        const { energy } = this.context;
+        return (
+            <li>
+                <ul>
+                    <li>Galaxy - {this.state.id} has {energy} energy <button onClick={this.createEnergy}>Create Energy</button><button onClick={this.consumeEnergyCreatePlanet}>Create Planet</button></li>
+                    <li>
+                        <ul>
+                            {
+                                this.state.planets.map(
+                                    planet => <Planet key={planet.id} planet={planet}></Planet>
+                                )
+                            }
+                        </ul>
+                    </li>
+                </ul>
+            </li>
         );
     }
 }

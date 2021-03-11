@@ -1,11 +1,15 @@
 import React, {Component, createContext} from 'react';
 
-export const MultiverseContext = createContext({
-    createEnergy: () => {},
-    consumeEnergyCreatePlanet: () => {},
-    energy: -1,
-    messages: [],
-});
+interface MultiverseContextType {
+    energy: number,
+    messages: string[],
+    createEnergy: () => void,
+    consumeEnergyCreatePlanet: () => void,
+    addMessage: (messageText: string) => void,
+    deleteMessages: () => void,
+}
+
+export const MultiverseContext = createContext<Partial<MultiverseContextType>>({});
 
 export class MultiverseContextProvider extends Component {
     state : {
@@ -26,6 +30,9 @@ export class MultiverseContextProvider extends Component {
         const messages = [...this.state.messages];
         messages.push(messageText);
         this.setState({ messages });
+    }
+    deleteMessages = () => {
+        this.setState({ messages: [] });
     }
 
     render() {

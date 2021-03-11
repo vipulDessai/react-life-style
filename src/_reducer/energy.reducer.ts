@@ -1,4 +1,4 @@
-import { KarmaStateType } from '@/_types';
+import { EnergyStateType } from '@/_types';
 
 enum KarmaType {
     INIT = 'init',
@@ -9,7 +9,7 @@ interface ActionType {
     type: string,
 }
 
-export function karma(state: KarmaStateType = {qty: 0}, action: ActionType) {
+export function Energy(state: EnergyStateType = {qty: 0}, action: ActionType) {
     switch (action.type) {
         case KarmaType.INIT:
             return {qty: 1};

@@ -128,11 +128,21 @@ export class UniverseComponent extends Component<PropsType, StateType> {
     }
 }
 
-const mapStateToProps = (state: RootState) => {
-    return { messages: state.Messages.messages };
-};
-const mapDispatchToProps = (dispatch: any) => {
-    return { messageDispatcher: dispatch };
-};
 
-export const Universe = connect(mapStateToProps, mapDispatchToProps)(UniverseComponent);
+
+let unifiedUniverse;
+if(window.location.href.indexOf('reducer') > -1) {
+    const mapStateToProps = (state: RootState) => {
+        return { messages: state.Messages.messages };
+    };
+    const mapDispatchToProps = (dispatch: any) => {
+        return { messageDispatcher: dispatch };
+    };
+    
+    unifiedUniverse = connect(mapStateToProps, mapDispatchToProps)(UniverseComponent);
+}
+else {
+    unifiedUniverse = UniverseComponent;
+}
+
+export const Universe = unifiedUniverse;
