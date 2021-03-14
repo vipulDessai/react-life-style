@@ -42,6 +42,8 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         };
     }
 
+    GalaxyComponent = Galaxy();
+
     componentDidMount() {
         console.log('Universe Instantiated!!');
     }
@@ -156,7 +158,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                 </ul>
                 <ul>
                 {
-                    this.state.galaxies.map(galaxy => <Galaxy key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
+                    this.state.galaxies.map(galaxy => <this.GalaxyComponent key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
                 }
                 </ul>
             </section>
@@ -164,24 +166,21 @@ export class UniverseComponent extends Component<PropsType, StateType> {
     }
 }
 
-
-
-let unifiedUniverse;
-if(window.location.href.indexOf('reducer') > -1) {
-    const mapStateToProps = (state: RootState) => {
-        return { 
-            messages: state.Messages.messages,
-            darkStone: state.DarkStone,
+export const Universe = () => {
+    if(window.location.href.indexOf('reducer') > -1) {
+        const mapStateToProps = (state: RootState) => {
+            return { 
+                messages: state.Messages.messages,
+                darkStone: state.DarkStone,
+            };
         };
-    };
-    const mapDispatchToProps = (dispatch: any) => {
-        return { dispatch };
-    };
-    
-    unifiedUniverse = connect(mapStateToProps, mapDispatchToProps)(UniverseComponent);
-}
-else {
-    unifiedUniverse = UniverseComponent;
-}
-
-export const Universe = unifiedUniverse;
+        const mapDispatchToProps = (dispatch: any) => {
+            return { dispatch };
+        };
+        
+        return connect(mapStateToProps, mapDispatchToProps)(UniverseComponent);
+    }
+    else {
+        return UniverseComponent;
+    }
+};

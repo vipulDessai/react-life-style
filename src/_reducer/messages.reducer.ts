@@ -10,9 +10,9 @@ interface Action {
 }
 
 export function Messages(state: State = { messages: [] }, action: Action) {
+    const messages = [...state.messages];
     switch (action.type) {
         case MessagesActionType.ADD:
-            const messages = [...state.messages];
             messages.push(action.messageText);
             
             return { messages };
@@ -21,6 +21,6 @@ export function Messages(state: State = { messages: [] }, action: Action) {
             return { messages: [] };
 
         default:
-            return { messages: [] };
+            return state;
     }
 }

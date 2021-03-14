@@ -63,19 +63,17 @@ class PlanetComponent extends Component<PropsType, StateType> {
     }
 }
 
-let unifiedPlanet;
-
-if(window.location.href.indexOf('reducer') > -1) {
-    const mapStateToProps = (state: RootState) => {
-        return { darkStone: state.DarkStone };
-    };
-    const mapDispatchToProps = (dispatch: any) => {
-        return { dispatch };
-    };
-    unifiedPlanet = connect(mapStateToProps, mapDispatchToProps)(PlanetComponent);
-}
-else {
-    unifiedPlanet = PlanetComponent;
-}
-
-export const Planet = unifiedPlanet;
+export const Planet = () => {
+    if (window.location.href.indexOf('reducer') > -1) {
+        const mapStateToProps = (state: RootState) => {
+            return { darkStone: state.DarkStone };
+        };
+        const mapDispatchToProps = (dispatch: any) => {
+            return { dispatch };
+        };
+        return connect(mapStateToProps, mapDispatchToProps)(PlanetComponent);
+    }
+    else {
+        return PlanetComponent;
+    }
+};

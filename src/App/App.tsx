@@ -25,23 +25,28 @@ export class App extends Component {
                         <Route 
                             path="/reducer" 
                             component={
-                                (props: any) => 
-                                    (
+                                (props: any) => {
+                                    let UniverseComponent = Universe();
+                                    return (
                                         <Provider store={store}>
-                                            <Universe {...props} />
+                                            <UniverseComponent {...props} />
                                         </Provider>
-                                    )
+                                    );
+                                }
                             }
                         ></Route>
                         <Route 
                             path="/context" 
                             component={
-                                (props: any) => 
-                                    (
+                                (props: any) => {
+                                    let UniverseComponent = Universe();
+                                    return (
                                         <MultiverseContextProvider>
-                                            <Universe {...props} />
+                                            <UniverseComponent {...props} />
                                         </MultiverseContextProvider>
-                                    )
+                                    );
+                                }
+                                    
                             }
                         ></Route>
                         <Route path="/context"></Route>

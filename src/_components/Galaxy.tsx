@@ -29,6 +29,8 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
         };
     }
 
+    PlanetComponent = Planet();
+
     shouldComponentUpdate(nextProps: PropsType, nextState: StateType):boolean {
         // as of now allow update irrespectively
         return true;
@@ -39,7 +41,7 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
 
         return {
             id: props.galaxy.id,
-            planets: [{ id: 0 }],
+            planets: state.planets.length == 0 ? [{ id: 0 }] : state.planets,
         };
     }
 
@@ -48,11 +50,16 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
     }
 
     createPlanet = () => {
-        if(this.context) {
-            const { createPlanet } = this.context;
+        // TODO: check if context is available properly
+        if(this.context.foo) {
+            const { dispatch } = this.context;
         }
         else {
             if(this.props.darkStone.ready) {
+                const planets = [...this.state.planets];
+                planets.sort((a, b) => a.id - b.id);
+                planets.push({ id: planets[planets.length - 1].id + 1 });
+                this.setState({planets});
                 this.props.dispatch({type: DarkStoneActionType.CONSUME});
             }
             else {
@@ -70,7 +77,7 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
                         <ul>
                             {
                                 this.state.planets.map(
-                                    planet => <Planet key={planet.id} planet={planet}></Planet>
+                                    planet => <this.PlanetComponent key={planet.id} planet={planet} />
                                 )
                             }
                         </ul>
@@ -81,21 +88,20 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
     }
 }
 
-let unifiedGalaxyComponent;
-if(window.location.href.indexOf('reducer') > -1) {
-    const mapStateToProps = (state: RootState) => {
-        return {
-            darkStone: state.DarkStone,
+export const Galaxy = () => {
+    if(window.location.href.indexOf('reducer') > -1) {
+        const mapStateToProps = (state: RootState) => {
+            return {
+                darkStone: state.DarkStone,
+            };
         };
-    };
-    const mapDispatchToProps = (dispatch: any) => {
-        return { dispatch };
-    };
-
-    unifiedGalaxyComponent = connect(mapStateToProps, mapDispatchToProps)(GalaxyComponent);
-}
-else {
-    unifiedGalaxyComponent = GalaxyComponent;
-}
-
-export const Galaxy = unifiedGalaxyComponent;
+        const mapDispatchToProps = (dispatch: any) => {
+            return { dispatch };
+        };
+    
+        return connect(mapStateToProps, mapDispatchToProps)(GalaxyComponent);
+    }
+    else {
+        return GalaxyComponent;
+    }
+};
