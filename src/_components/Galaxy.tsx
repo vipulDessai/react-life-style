@@ -67,17 +67,24 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
             }
         }
     }
+    deletePlanet = (id: number) => {
+        let planets = [...this.state.planets];
+        planets = planets.filter(planet => planet.id !== id);
+
+        this.setState({planets});
+    }
 
     render() {
+        const {id} = this.state;
         return (
             <li>
                 <ul>
-                    <li>Galaxy - {this.state.id} <button onClick={this.createPlanet}>Create Planet</button></li>
+                    <li>Galaxy - {id} <button onClick={this.createPlanet}>Create Planet</button><button onClick={() => this.props.destroyGalaxy(id)}>x</button></li>
                     <li>
                         <ul>
                             {
                                 this.state.planets.map(
-                                    planet => <this.PlanetComponent key={planet.id} planet={planet} />
+                                    planet => <this.PlanetComponent key={planet.id} deletePlanet={this.deletePlanet} planet={planet} />
                                 )
                             }
                         </ul>
