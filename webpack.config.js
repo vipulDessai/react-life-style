@@ -58,6 +58,7 @@ const configs = {
     output: {
         path: path.resolve(__dirname, './build'),
         filename: 'bundle.js',
+        publicPath: '/assets/'
     },
 };
 
