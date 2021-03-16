@@ -37,9 +37,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
     constructor(props: PropsType) {
         super(props);
         this.state = {
-            galaxies: [{
-                id: 1,
-            }]
+            galaxies: []
         };
 
         this.getAllPokemon();
@@ -97,23 +95,26 @@ export class UniverseComponent extends Component<PropsType, StateType> {
     }
 
     createGalaxy = () => {
-        const galaxies = [...this.state.galaxies];
         const darknessReady = this.props.darkStone.ready;
 
-        // if dark stone is available, consume it
+        // if dark stone is available, consume it and create Galaxy
         if(darknessReady) {
-            galaxies.push({
-                id: galaxies.length + 1,
-            });
+            const galaxies = [...this.state.galaxies];
+            if(galaxies.length > 0) {
+                galaxies.sort((a, b) => a.id - b.id);
+                galaxies.push({ id: galaxies[galaxies.length - 1].id + 1 });
+            }
+            else {
+                galaxies.push({id: 0});
+            }
 
+            this.setState({ galaxies });
             this.dispatcher(UniverseActions.CREATE_GALAXY);
             this.dispatcher(UniverseActions.ADD_MESSAGE, 'Darkness consumed!!');
         }
         else {
             this.dispatcher(UniverseActions.ADD_MESSAGE, 'Not enough darkness!!');
         }
-
-        this.setState({ galaxies });
     }
     destroyGalaxy = (galaxyId: number) => {
         let galaxies = [...this.state.galaxies];
