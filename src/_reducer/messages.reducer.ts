@@ -1,7 +1,7 @@
 import { MessagesActionType } from '@/_types';
 
 interface State {
-    messages: string[],
+    message: string,
 }
 
 interface Action {
@@ -9,16 +9,13 @@ interface Action {
     messageText: string,
 }
 
-export function Messages(state: State = { messages: [] }, action: Action) {
-    const messages = [...state.messages];
+export function Messages(state: State = { message: '' }, action: Action) {
     switch (action.type) {
         case MessagesActionType.ADD:
-            messages.push(action.messageText);
-            
-            return { messages };
+            return { message: action.messageText };
 
         case MessagesActionType.DELETE:
-            return { messages: [] };
+            return { message: '' };
 
         default:
             return state;

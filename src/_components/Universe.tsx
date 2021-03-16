@@ -3,12 +3,13 @@ import { connect } from 'react-redux';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
-import { GalaxyType, MessagesActionType, DarkStoneType, DarkStoneActionType } from '@/_types';
+import { GalaxyType, MessagesActionType, DarkStoneType, DarkStoneActionType, PokemonType, PokemonAction } from '@/_types';
 import { RootState } from '@/_reducer';
 import { MultiverseContext } from '@/_context';
+import axios from 'axios';
 
 interface PropsType {
-    messages?: string[],
+    message?: string,
     darkStone?: DarkStoneType,
     dispatch?: any
 }
@@ -40,6 +41,34 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                 id: 1,
             }]
         };
+
+        this.getAllPokemon();
+    }
+
+    getAllPokemon = async () => {
+        const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
+        if(response.status == 200) {
+            const allPokemons = response.data.results
+                .map(
+                    (pokemon: PokemonType) => {
+                        pokemon.level = 0;
+                        return pokemon;
+                    }
+                );
+
+            // context
+            // TODO: check if context is available properly
+            if (this.context.foo) {
+
+            }
+            // reducer
+            else {
+                this.props.dispatch({ type: PokemonAction.INIT, allPokemons });
+            }
+        }
+        else {
+            console.log(response);
+        }
     }
 
     GalaxyComponent = Galaxy();
@@ -59,7 +88,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         
         console.log('Universe Updated!!');
         
-        if(this.props.messages.length > 0) {
+        if(this.props.message.length > 0) {
             clearTimeout(timerPointer);
             timerPointer = setTimeout(() => {
                 this.dispatcher(UniverseActions.DELETE_ALL_MESSAGES);
@@ -99,6 +128,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         );
 
         this.setState({ galaxies });
+        this.dispatcher(UniverseActions.ADD_MESSAGE, 'Galaxy destroyed!!');
     }
     createDarkness = () => {
         let darknessReady = this.props.darkStone.ready;
@@ -150,7 +180,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         return (
             <section>
                 {
-                    this.props.messages && this.props.messages.length > 0 && <Messages messages={this.props.messages}></Messages>
+                    this.props.message && this.props.message.length > 0 && <Messages messageText={this.props.message}></Messages>
                 }
                 <ul>
                     <li><button onClick={this.createGalaxy}>Create Galaxy</button></li>
@@ -170,7 +200,7 @@ export const Universe = () => {
     if(window.location.href.indexOf('reducer') > -1) {
         const mapStateToProps = (state: RootState) => {
             return { 
-                messages: state.Messages.messages,
+                message: state.Messages.message,
                 darkStone: state.DarkStone,
             };
         };

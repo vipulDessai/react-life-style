@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 interface PropsType {
-    messages: string[]
+    messageText: string
 }
 
 export class Messages extends Component<PropsType> {
@@ -20,13 +20,7 @@ export class Messages extends Component<PropsType> {
     render() {
         console.log('messages rendered!!');
         return (
-            <ul>
-                {
-                    this.props.messages.map(
-                        (message, index) => <li key={index}>{message}</li>
-                    )
-                }
-            </ul>
+            <p>{this.props.messageText}</p>
         );
     }
 }

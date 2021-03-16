@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 
-import { PlanetType, PokemonType } from '@/_types';
+import { DarkStoneActionType, DarkStoneType, MessagesActionType, PlanetType, PokemonType } from '@/_types';
 import { Pokemon } from './Pokemon';
 import { connect } from 'react-redux';
 import { RootState } from '@/_reducer';
@@ -9,11 +9,18 @@ import { RootState } from '@/_reducer';
 interface PropsType {
     planet: PlanetType,
     deletePlanet: (id: number) => void,
+    pokemons?: PokemonType[],
+    dispatch?: any,
+    darkStone?: DarkStoneType,
 }
 
 interface StateType {
-    allPokemons: PokemonType[],
     currentPokemons: PokemonType[],
+}
+
+enum PlanetActions {
+    CREATE_POKEMON = 'CREATE_POKEMON',
+    ADD_MESSAGE = 'ADD_MESSAGE',
 }
 
 class PlanetComponent extends Component<PropsType, StateType> {
@@ -21,42 +28,29 @@ class PlanetComponent extends Component<PropsType, StateType> {
         super(props);
 
         this.state = {
-            allPokemons: [],
             currentPokemons: [],
         };
     }
-    componentDidMount() {
-        this.getAllPokemon();
-    }
+    createRandomPokemon = () => {
+        const darknessReady = this.props.darkStone.ready;
+        if(darknessReady) {
+            const addPokemonsList = [...this.state.currentPokemons];
+            const randomIndex = Math.floor(Math.random() * this.props.pokemons.length);
 
-    getAllPokemon = async () => {
-        const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
-        if(response.status == 200) {
-            const allPokemons = response.data.results
-                .map(
-                    (pokemon: PokemonType) => {
-                        pokemon.level = 0;
-                        return pokemon;
-                    }
-                );
-            this.setState({allPokemons});
+            const pokemon = this.props.pokemons[randomIndex];
+
+            // TODO: need to fix this by assigning a proper ID
+            pokemon.id = addPokemonsList.length;
+
+            addPokemonsList.push(pokemon);
+
+            this.setState({currentPokemons: addPokemonsList});
+            this.dispatcher(PlanetActions.CREATE_POKEMON);
+            this.dispatcher(PlanetActions.ADD_MESSAGE, 'Pokemon created!!');
         }
         else {
-            console.log(response);
+            this.dispatcher(PlanetActions.ADD_MESSAGE, 'Not enough darkness!!');
         }
-    } 
-    createRandomPokemon = () => {
-        const addPokemonsList = [...this.state.currentPokemons];
-        const randomIndex = Math.floor(Math.random() * this.state.allPokemons.length);
-
-        const pokemon = this.state.allPokemons[randomIndex];
-
-        // TODO: need to fix this by assigning a proper ID
-        pokemon.id = addPokemonsList.length;
-
-        addPokemonsList.push(pokemon);
-
-        this.setState({currentPokemons: addPokemonsList});
     }
     upgradePokemon = (id: number) => {
         const currentPokemons = [...this.state.currentPokemons];
@@ -69,6 +63,7 @@ class PlanetComponent extends Component<PropsType, StateType> {
         );
 
         this.setState({currentPokemons});
+        this.dispatcher(PlanetActions.ADD_MESSAGE, 'Pokemon updated!!');
     }
     deletePokemon = (id: number) => {
         let currentPokemons = [...this.state.currentPokemons];
@@ -80,6 +75,33 @@ class PlanetComponent extends Component<PropsType, StateType> {
         );
 
         this.setState({currentPokemons});
+        this.dispatcher(PlanetActions.ADD_MESSAGE, 'Pokemon killed!!');
+    }
+
+    dispatcher = (type: string, messageText?: string) => {
+        let dipatchType = '';
+        switch (type) {
+            case PlanetActions.CREATE_POKEMON:
+                dipatchType = DarkStoneActionType.CONSUME;
+                break;
+            
+            case PlanetActions.ADD_MESSAGE:
+                dipatchType = MessagesActionType.ADD;
+                break;
+        
+            default:
+                break;
+        }
+
+        // context
+        // TODO: check if context is available properly
+        if(this.context.foo) {
+            
+        }
+        // reducer
+        else {
+            this.props.dispatch({type: dipatchType, messageText});
+        }
     }
 
     render() {
@@ -107,7 +129,7 @@ class PlanetComponent extends Component<PropsType, StateType> {
 export const Planet = () => {
     if (window.location.href.indexOf('reducer') > -1) {
         const mapStateToProps = (state: RootState) => {
-            return { darkStone: state.DarkStone };
+            return { darkStone: state.DarkStone, pokemons: state.Pokemons.all };
         };
         const mapDispatchToProps = (dispatch: any) => {
             return { dispatch };

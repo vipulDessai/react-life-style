@@ -4,3 +4,7 @@ export interface PokemonType {
     level: number,
     url: string,
 }
+
+export enum PokemonAction {
+    INIT = 'POKEMON_INIT',
+}

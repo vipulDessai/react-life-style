@@ -17,6 +17,11 @@ interface StateType {
     planets: PlanetType[]
 }
 
+enum GalaxyActions {
+    CREATE_PLANET = 'CREATE_PLANET',
+    ADD_MESSAGE = 'ADD_MESSAGE',
+}
+
 export class GalaxyComponent extends Component<PropsType, StateType> {
     static context = MultiverseContext;
 
@@ -41,7 +46,7 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
 
         return {
             id: props.galaxy.id,
-            planets: state.planets.length == 0 ? [{ id: 0 }] : state.planets,
+            planets: state.planets,
         };
     }
 
@@ -57,13 +62,20 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
         else {
             if(this.props.darkStone.ready) {
                 const planets = [...this.state.planets];
-                planets.sort((a, b) => a.id - b.id);
-                planets.push({ id: planets[planets.length - 1].id + 1 });
+                if(planets.length > 0) {
+                    planets.sort((a, b) => a.id - b.id);
+                    planets.push({ id: planets[planets.length - 1].id + 1 });
+                }
+                else {
+                    planets.push({id: 0});
+                }
+
                 this.setState({planets});
-                this.props.dispatch({type: DarkStoneActionType.CONSUME});
+                this.dispatcher(GalaxyActions.CREATE_PLANET);
+                this.dispatcher(GalaxyActions.ADD_MESSAGE, 'Planet spawned!!');
             }
             else {
-                this.props.dispatch({type: MessagesActionType.ADD, messageText: 'Not enough darkness!!'});
+                this.dispatcher(GalaxyActions.ADD_MESSAGE, 'Not enough darkness!!');
             }
         }
     }
@@ -72,6 +84,33 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
         planets = planets.filter(planet => planet.id !== id);
 
         this.setState({planets});
+        this.dispatcher(GalaxyActions.ADD_MESSAGE, 'Planet destroyed!!');
+    }
+
+    dispatcher = (type: string, messageText?: string) => {
+        let dipatchType = '';
+        switch (type) {
+            case GalaxyActions.CREATE_PLANET:
+                dipatchType = DarkStoneActionType.CONSUME;
+                break;
+            
+            case GalaxyActions.ADD_MESSAGE:
+                dipatchType = MessagesActionType.ADD;
+                break;
+        
+            default:
+                break;
+        }
+
+        // context
+        // TODO: check if context is available properly
+        if(this.context.foo) {
+            
+        }
+        // reducer
+        else {
+            this.props.dispatch({type: dipatchType, messageText});
+        }
     }
 
     render() {
@@ -80,15 +119,18 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
             <li>
                 <ul>
                     <li>Galaxy - {id} <button onClick={this.createPlanet}>Create Planet</button><button onClick={() => this.props.destroyGalaxy(id)}>x</button></li>
-                    <li>
-                        <ul>
-                            {
-                                this.state.planets.map(
-                                    planet => <this.PlanetComponent key={planet.id} deletePlanet={this.deletePlanet} planet={planet} />
-                                )
-                            }
-                        </ul>
-                    </li>
+                    {
+                        this.state.planets.length > 0 &&
+                            <li>
+                                <ul>
+                                    {
+                                        this.state.planets.map(
+                                            planet => <this.PlanetComponent key={planet.id} deletePlanet={this.deletePlanet} planet={planet} />
+                                        )
+                                    }
+                                </ul>
+                            </li>
+                    }
                 </ul>
             </li>
         );
