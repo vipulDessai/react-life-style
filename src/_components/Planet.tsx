@@ -38,7 +38,7 @@ class PlanetComponent extends Component<PropsType, StateType> {
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ alpha: true });
-        renderer.setSize( 300, 300 );
+        renderer.setSize(1500, 1500);
         this.mount.appendChild( renderer.domElement );
 
         const geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -48,13 +48,8 @@ class PlanetComponent extends Component<PropsType, StateType> {
         loader.load(
             '/assets/3d/cube.glb', 
             (gltf) => {
-                
-                scene.add(gltf.scene);
-
-                const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-                scene.add( light );
-
-                camera.position.z = 2;
+                const root = gltf.scene;
+                scene.add(root);
             },
             undefined,
             (error) => {
@@ -64,19 +59,19 @@ class PlanetComponent extends Component<PropsType, StateType> {
 
         // const cube = new THREE.Mesh( geometry, material );        
         // scene.add( cube );
-        // const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-        // scene.add( light );
+        const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+        scene.add( light );
 
-        // camera.position.z = 2;
+        camera.position.z = 2;
 
-        // const animate = function () {
-        //     requestAnimationFrame( animate );
-        //     cube.rotation.x += 0.01;
-        //     cube.rotation.y += 0.01;
-        //     cube.rotation.z += 0.01;
-        //     renderer.render( scene, camera );
-        // };
-        // animate();
+        const animate = function () {
+            requestAnimationFrame( animate );
+            // cube.rotation.x += 0.01;
+            // cube.rotation.y += 0.01;
+            // cube.rotation.z += 0.01;
+            renderer.render( scene, camera );
+        };
+        animate();
     }
 
     createRandomPokemon = () => {
