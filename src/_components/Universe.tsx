@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
 import { GalaxyType, MessagesActionType, DarkStoneType, DarkStoneActionType, PokemonType, PokemonAction } from '@/_types';
@@ -43,6 +46,60 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         this.getAllPokemon();
     }
 
+    mount: any;
+    componentDidMount() {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(500, 500);
+        this.mount.appendChild( renderer.domElement );
+
+        const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        const material = new THREE.MeshStandardMaterial( { color: 0x7e31eb } );
+
+        const loader = new GLTFLoader();
+        loader.load(
+            '/assets/3d/cube-color-uv.gltf', 
+            (gltf) => {
+                var mroot = gltf.scene;
+                var bbox = new THREE.Box3().setFromObject(mroot);
+                var cent = bbox.getCenter(new THREE.Vector3());
+                var size = bbox.getSize(new THREE.Vector3());
+
+                //Rescale the object to normalized space
+                var maxAxis = Math.max(size.x, size.y, size.z);
+                mroot.scale.multiplyScalar(1.0 / maxAxis);
+                bbox.setFromObject(mroot);
+                bbox.getCenter(cent);
+                bbox.getSize(size);
+                //Reposition to 0,halfY,0
+                mroot.position.copy(cent).multiplyScalar(-1);
+                mroot.position.y += (size.y * 0.7);
+                scene.add(mroot);
+            },
+            undefined,
+            (error) => {
+                console.log(error);
+            }
+        );
+
+        // const cube = new THREE.Mesh( geometry, material );        
+        // scene.add( cube );
+        const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+        scene.add( light );
+
+        camera.position.z = 2;
+
+        const animate = function () {
+            requestAnimationFrame( animate );
+            // cube.rotation.x += 0.01;
+            // cube.rotation.y += 0.01;
+            // cube.rotation.z += 0.01;
+            renderer.render( scene, camera );
+        };
+        animate();
+    }
+
     getAllPokemon = async () => {
         const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
         if(response.status == 200) {
@@ -70,10 +127,6 @@ export class UniverseComponent extends Component<PropsType, StateType> {
     }
 
     GalaxyComponent = Galaxy();
-
-    componentDidMount() {
-        console.log('Universe Instantiated!!');
-    }
 
     getSnapshotBeforeUpdate(prevProps: PropsType, prevStates: StateType) {
         console.log('Universe is about to be Updated!!');
@@ -192,6 +245,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                     this.state.galaxies.map(galaxy => <this.GalaxyComponent key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
                 }
                 </ul>
+                <div ref={ref => (this.mount = ref)}></div>
             </section>
         );
     }

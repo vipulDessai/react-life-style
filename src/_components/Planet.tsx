@@ -1,8 +1,5 @@
 import React, { Component } from 'react';
 
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-
 import { DarkStoneActionType, DarkStoneType, MessagesActionType, PlanetType, PokemonType } from '@/_types';
 import { Pokemon } from './Pokemon';
 import { connect } from 'react-redux';
@@ -32,46 +29,6 @@ class PlanetComponent extends Component<PropsType, StateType> {
         this.state = {
             currentPokemons: [],
         };
-    }
-    mount: any;
-    componentDidMount() {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true });
-        renderer.setSize(1500, 1500);
-        this.mount.appendChild( renderer.domElement );
-
-        const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-        const material = new THREE.MeshStandardMaterial( { color: 0x7e31eb } );
-
-        const loader = new GLTFLoader();
-        loader.load(
-            '/assets/3d/cube.glb', 
-            (gltf) => {
-                const root = gltf.scene;
-                scene.add(root);
-            },
-            undefined,
-            (error) => {
-                console.log(error);
-            }
-        );
-
-        // const cube = new THREE.Mesh( geometry, material );        
-        // scene.add( cube );
-        const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
-        scene.add( light );
-
-        camera.position.z = 2;
-
-        const animate = function () {
-            requestAnimationFrame( animate );
-            // cube.rotation.x += 0.01;
-            // cube.rotation.y += 0.01;
-            // cube.rotation.z += 0.01;
-            renderer.render( scene, camera );
-        };
-        animate();
     }
 
     createRandomPokemon = () => {
@@ -164,7 +121,6 @@ class PlanetComponent extends Component<PropsType, StateType> {
                             </ul>
                         </li>
                 }
-                <div ref={ref => (this.mount = ref)}></div>
             </>
         );
     }
