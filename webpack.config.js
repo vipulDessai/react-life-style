@@ -54,11 +54,13 @@ const configs = {
     devServer: {
         historyApiFallback: true,
         hot: true,
+        proxy: {
+            ['/assets' ]: 'http://localhost:8080'
+        }
     },
     output: {
         path: path.resolve(__dirname, './build'),
         filename: 'bundle.js',
-        publicPath: '/assets/'
     },
 };
 
