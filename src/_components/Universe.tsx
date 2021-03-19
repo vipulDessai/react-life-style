@@ -243,7 +243,7 @@ function main(canvas: any) {
         const planeSize = 40;
 
         const loader = new THREE.TextureLoader();
-        const texture = loader.load('/assets/3d/textures/checker.png');
+        const texture = loader.load('/assets/3d/checker.png');
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.magFilter = THREE.NearestFilter;
@@ -307,8 +307,9 @@ function main(canvas: any) {
     {
         const loader = new GLTFLoader();
         loader.load(
-            '/assets/3d/cube-color-uv.gltf',
-            // '/assets/3d/city.gltf',
+            // '/assets/3d/cube-color-uv.gltf',
+            '/assets/3d/cube-color-uv.glb',
+            // '/assets/3d/city/city.gltf',
             (gltf) => {
                 var root = gltf.scene;
                 scene.add(root);
