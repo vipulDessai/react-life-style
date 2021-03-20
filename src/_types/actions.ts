@@ -1,0 +1,26 @@
+export enum MessagesActions {
+    ADD_MESSAGE = 'ADD_MESSAGE',
+    DELETE_MESSAGE = 'DELETE_MESSAGE',
+}
+
+export enum DarkStoneActions {
+    CREATE_DARKSTONE = 'CREATE_DARKSTONE',
+    CONSUME_DARKSTONE = 'CONSUME_DARKSTONE',
+}
+
+export enum UniverseActions {
+    CREATE_GALAXY = 'CREATE_GALAXY',
+    DELETE_GALAXY = 'DELETE_GALAXY',
+    INIT_CREATURES = 'INIT_ALL_POKEMONS',
+}
+
+export enum GalaxyActions {
+    CREATE_PLANET = 'CREATE_PLANET',
+    DELETE_PLANET = 'DELETE_PLANET',
+}
+
+export enum PlanetActions {
+    CREATE_POKEMON = 'CREATE_POKEMON',
+    KILL_POKEMON = 'KILL_POKEMON',
+    UPGRADE_POKEMON = 'UPGRADE_POKEMON',
+}

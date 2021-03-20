@@ -7,7 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
-import { GalaxyType, MessagesActionType, DarkStoneType, DarkStoneActionType, PokemonType, PokemonAction } from '@/_types';
+import { GalaxyType, DarkStoneType, PokemonType, MessagesActions, DarkStoneActions, UniverseActions } from '@/_types';
 import { RootState } from '@/_reducer';
 import { MultiverseContext } from '@/_context';
 import axios from 'axios';
@@ -15,6 +15,7 @@ import axios from 'axios';
 interface PropsType {
     message?: string,
     darkStone?: DarkStoneType,
+    galaxies: GalaxyType[],
     dispatch?: any
 }
 
@@ -26,13 +27,6 @@ interface SnapShotType {
     message: string,
 }
 
-enum UniverseActions {
-    CREATE_GALAXY = 'CREATE_GALAXY',
-    CREATE_DARKSTONE = 'CREATE_DARKSTONE',
-    ADD_MESSAGE = 'ADD_MESSAGE',
-    DELETE_ALL_MESSAGES = 'DELETE_ALL_MESSAGES',
-}
-
 let timerPointer: NodeJS.Timer = null;
 
 export class UniverseComponent extends Component<PropsType, StateType> {
@@ -40,22 +34,18 @@ export class UniverseComponent extends Component<PropsType, StateType> {
 
     constructor(props: PropsType) {
         super(props);
-        this.state = {
-            galaxies: []
-        };
-
         this.getAllPokemon();
     }
 
-    canvas: any;
+    canvas: HTMLCanvasElement;
     componentDidMount() {
-        main(this.canvas);
+        animateCanvas(this.canvas);
     }
 
     getAllPokemon = async () => {
         const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
         if(response.status == 200) {
-            const allPokemons = response.data.results
+            const allCreatures = response.data.results
                 .map(
                     (pokemon: PokemonType) => {
                         pokemon.level = 0;
@@ -63,15 +53,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                     }
                 );
 
-            // context
-            // TODO: check if context is available properly
-            if (this.context.foo) {
-
-            }
-            // reducer
-            else {
-                this.props.dispatch({ type: PokemonAction.INIT, allPokemons });
-            }
+            this.dispatcher(UniverseActions.INIT_CREATURES, { allCreatures } );
         }
         else {
             console.log(response);
@@ -94,82 +76,43 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         if(this.props.message.length > 0) {
             clearTimeout(timerPointer);
             timerPointer = setTimeout(() => {
-                this.dispatcher(UniverseActions.DELETE_ALL_MESSAGES);
+                this.dispatcher(MessagesActions.DELETE_MESSAGE);
             }, 5000);
         }
     }
 
     createGalaxy = () => {
-        const darknessReady = this.props.darkStone.ready;
+        const darknessReady = this.selector('darkStone');
 
         // if dark stone is available, consume it and create Galaxy
         if(darknessReady) {
-            const galaxies = [...this.state.galaxies];
-            if(galaxies.length > 0) {
-                galaxies.sort((a, b) => a.id - b.id);
-                galaxies.push({ id: galaxies[galaxies.length - 1].id + 1 });
-            }
-            else {
-                galaxies.push({id: 0});
-            }
-
-            this.setState({ galaxies });
             this.dispatcher(UniverseActions.CREATE_GALAXY);
-            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Darkness consumed!!');
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Darkness consumed!!');
         }
         else {
-            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Not enough darkness!!');
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Not enough darkness!!');
         }
     }
     destroyGalaxy = (galaxyId: number) => {
-        let galaxies = [...this.state.galaxies];
-        galaxies = galaxies.filter(
-            galaxy => galaxy.id !== galaxyId
-        ).map(
-            (galaxy, index) => {
-                galaxy.id = index;
-
-                return galaxy;
-            }
-        );
-
-        this.setState({ galaxies });
-        this.dispatcher(UniverseActions.ADD_MESSAGE, 'Galaxy destroyed!!');
+        this.dispatcher(UniverseActions.DELETE_GALAXY, { galaxyId });
+        this.dispatcher(MessagesActions.ADD_MESSAGE, 'Galaxy destroyed!!');
     }
     createDarkness = () => {
-        let darknessReady = this.props.darkStone.ready;
+        let darknessReady = this.selector('darkStone');
         if(!darknessReady) {
-            this.dispatcher(UniverseActions.CREATE_DARKSTONE);
-            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Darkness is spreading!!');
+            this.dispatcher(DarkStoneActions.CREATE_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Darkness is spreading!!');
         }
         else {
-            this.dispatcher(UniverseActions.ADD_MESSAGE, 'Please comsume the existing darkness!!');
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Please comsume the existing darkness!!');
         }
     }
 
-    dispatcher = (type: string, messageText?: string) => {
-        let dipatchType = '';
-        switch (type) {
-            case UniverseActions.CREATE_GALAXY:
-                dipatchType = DarkStoneActionType.CONSUME;
-                break;
-
-            case UniverseActions.CREATE_DARKSTONE:
-                dipatchType = DarkStoneActionType.CREATE;
-                break;
-            
-            case UniverseActions.ADD_MESSAGE:
-                dipatchType = MessagesActionType.ADD;
-                break;
-            
-            case UniverseActions.DELETE_ALL_MESSAGES:
-                dipatchType = MessagesActionType.DELETE;
-                break;
-        
-            default:
-                break;
-        }
-
+    selector = (stateName: string) => {
+        return this.props.darkStone.ready;
+    }
+    dispatcher = (type: string, data?: any) => {
         // context
         // TODO: check if context is available properly
         if(this.context.foo) {
@@ -177,16 +120,17 @@ export class UniverseComponent extends Component<PropsType, StateType> {
         }
         // reducer
         else {
-            this.props.dispatch({type: dipatchType, messageText});
+            this.props.dispatch({type, data});
         }
     }
 
     render() {
         // console.log('universe rendered!!');
+        const { galaxies, message } = this.props;
         return (
             <section>
                 {
-                    this.props.message && this.props.message.length > 0 && <Messages messageText={this.props.message}></Messages>
+                    message && message.length > 0 && <Messages messageText={message}></Messages>
                 }
                 <ul>
                     <li><button onClick={this.createGalaxy}>Create Galaxy</button></li>
@@ -194,10 +138,10 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                 </ul>
                 <ul>
                 {
-                    this.state.galaxies.map(galaxy => <this.GalaxyComponent key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
+                    galaxies.map(galaxy => <this.GalaxyComponent key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
                 }
                 </ul>
-                <canvas className="canvas" ref={ref => (this.canvas = ref)}></canvas>
+                <canvas className="canvas" ref={ref => this.canvas = ref}></canvas>
             </section>
         );
     }
@@ -208,7 +152,8 @@ export const Universe = () => {
         const mapStateToProps = (state: RootState) => {
             return { 
                 message: state.Messages.message,
-                darkStone: state.DarkStone,
+                darkStone: state.Universe.darkStone,
+                galaxies: state.Universe.galaxies,
             };
         };
         const mapDispatchToProps = (dispatch: any) => {
@@ -222,8 +167,8 @@ export const Universe = () => {
     }
 };
 
-function main(canvas: any) {
-    const renderer = new THREE.WebGLRenderer({canvas});
+function animateCanvas(canvas: any) {
+    const renderer = new THREE.WebGLRenderer({canvas, alpha: true});
 
     const fov = 45;
     const aspect = 2;  // the canvas default
@@ -237,7 +182,6 @@ function main(canvas: any) {
     controls.update();
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('black');
 
     {
         const planeSize = 40;
@@ -319,7 +263,7 @@ function main(canvas: any) {
                 const boxSize = box.getSize(new THREE.Vector3()).length();
                 const boxCenter = box.getCenter(new THREE.Vector3());
 
-                frameArea(boxSize * 0.5, boxSize, boxCenter, camera);
+                // frameArea(boxSize * 0.5, boxSize, boxCenter, camera);
 
                 controls.maxDistance = boxSize * 10;
                 controls.target.copy(boxCenter);

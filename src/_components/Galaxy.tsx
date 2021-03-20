@@ -1,6 +1,6 @@
 import { MultiverseContext } from '@/_context';
 import { RootState } from '@/_reducer';
-import { DarkStoneActionType, DarkStoneType, GalaxyType, MessagesActionType, PlanetType } from '@/_types';
+import { DarkStoneActions, DarkStoneType, GalaxyActions, GalaxyType, MessagesActions, PlanetType } from '@/_types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Planet } from './Planet';
@@ -17,22 +17,8 @@ interface StateType {
     planets: PlanetType[]
 }
 
-enum GalaxyActions {
-    CREATE_PLANET = 'CREATE_PLANET',
-    ADD_MESSAGE = 'ADD_MESSAGE',
-}
-
-export class GalaxyComponent extends Component<PropsType, StateType> {
+class GalaxyComponent extends Component<PropsType> {
     static context = MultiverseContext;
-
-    constructor(props: PropsType) {
-        super(props);
-
-        this.state = {
-            id: null,
-            planets: []
-        };
-    }
 
     PlanetComponent = Planet();
 
@@ -41,67 +27,32 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
         return true;
     }
 
-    static getDerivedStateFromProps(props: PropsType, state: StateType) {
-        console.log('get the derived state from props');
-
-        return {
-            id: props.galaxy.id,
-            planets: state.planets,
-        };
-    }
-
     componentDidUpdate(prevProps: PropsType, prevState: StateType) {
-        console.log(`galaxy updated!! - planet count - ${prevState.planets.length}`);
+        
     }
 
-    createPlanet = () => {
-        // TODO: check if context is available properly
-        if(this.context.foo) {
-            const { dispatch } = this.context;
+    createPlanet = (galaxyId: number) => {
+        const darknessReady = this.selector('darkStone');
+        if(darknessReady) {
+            const data = { galaxyId };
+            this.dispatcher(GalaxyActions.CREATE_PLANET, data);
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Planet spawned!!');
         }
         else {
-            if(this.props.darkStone.ready) {
-                const planets = [...this.state.planets];
-                if(planets.length > 0) {
-                    planets.sort((a, b) => a.id - b.id);
-                    planets.push({ id: planets[planets.length - 1].id + 1 });
-                }
-                else {
-                    planets.push({id: 0});
-                }
-
-                this.setState({planets});
-                this.dispatcher(GalaxyActions.CREATE_PLANET);
-                this.dispatcher(GalaxyActions.ADD_MESSAGE, 'Planet spawned!!');
-            }
-            else {
-                this.dispatcher(GalaxyActions.ADD_MESSAGE, 'Not enough darkness!!');
-            }
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Not enough darkness!!');
         }
     }
-    deletePlanet = (id: number) => {
-        let planets = [...this.state.planets];
-        planets = planets.filter(planet => planet.id !== id);
-
-        this.setState({planets});
-        this.dispatcher(GalaxyActions.ADD_MESSAGE, 'Planet destroyed!!');
+    deletePlanet = (galaxyId: number, planetId: number) => {
+        const data = { galaxyId, planetId };
+        this.dispatcher(GalaxyActions.DELETE_PLANET, data);
+        this.dispatcher(MessagesActions.ADD_MESSAGE, 'Planet destroyed!!');
     }
 
-    dispatcher = (type: string, messageText?: string) => {
-        let dipatchType = '';
-        switch (type) {
-            case GalaxyActions.CREATE_PLANET:
-                dipatchType = DarkStoneActionType.CONSUME;
-                break;
-            
-            case GalaxyActions.ADD_MESSAGE:
-                dipatchType = MessagesActionType.ADD;
-                break;
-        
-            default:
-                break;
-        }
-
+    selector = (stateName: string) => {
+        return this.props.darkStone.ready;
+    }
+    dispatcher = (type: string, data?: any) => {
         // context
         // TODO: check if context is available properly
         if(this.context.foo) {
@@ -109,23 +60,24 @@ export class GalaxyComponent extends Component<PropsType, StateType> {
         }
         // reducer
         else {
-            this.props.dispatch({type: dipatchType, messageText});
+            this.props.dispatch({type, data});
         }
     }
 
     render() {
-        const {id} = this.state;
+        const { galaxy, destroyGalaxy } = this.props;
+        const { planets } = galaxy;
         return (
             <li>
                 <ul>
-                    <li>Galaxy - {id} <button onClick={this.createPlanet}>Create Planet</button><button onClick={() => this.props.destroyGalaxy(id)}>x</button></li>
+                    <li>Galaxy - {galaxy.id} <button onClick={() => this.createPlanet(galaxy.id)}>Create Planet</button><button onClick={() => destroyGalaxy(galaxy.id)}>x</button></li>
                     {
-                        this.state.planets.length > 0 &&
+                        planets.length > 0 &&
                             <li>
                                 <ul>
                                     {
-                                        this.state.planets.map(
-                                            planet => <this.PlanetComponent key={planet.id} deletePlanet={this.deletePlanet} planet={planet} />
+                                        planets.map(
+                                            planet => <this.PlanetComponent key={planet.id} galaxy={galaxy} planet={planet} deletePlanet={this.deletePlanet} />
                                         )
                                     }
                                 </ul>
@@ -141,7 +93,7 @@ export const Galaxy = () => {
     if(window.location.href.indexOf('reducer') > -1) {
         const mapStateToProps = (state: RootState) => {
             return {
-                darkStone: state.DarkStone,
+                darkStone: state.Universe.darkStone,
             };
         };
         const mapDispatchToProps = (dispatch: any) => {

@@ -1,4 +1,4 @@
-import { MessagesActionType } from '@/_types';
+import { MessagesActions } from '@/_types';
 
 interface State {
     message: string,
@@ -6,15 +6,15 @@ interface State {
 
 interface Action {
     type: string,
-    messageText: string,
+    data: string,
 }
 
 export function Messages(state: State = { message: '' }, action: Action) {
     switch (action.type) {
-        case MessagesActionType.ADD:
-            return { message: action.messageText };
+        case MessagesActions.ADD_MESSAGE:
+            return { message: action.data };
 
-        case MessagesActionType.DELETE:
+        case MessagesActions.DELETE_MESSAGE:
             return { message: '' };
 
         default:

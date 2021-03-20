@@ -1,15 +1,13 @@
 import { combineReducers } from 'redux';
 
-import { DarkStone } from './darkStone.reducer';
 import { Messages } from './messages.reducer';
-import { LifeCycleLogs } from './lifeCycleLogs.reducer';
-import { Pokemons } from './pokemons.reducer';
+import { LifeCycleLogs } from './life-cycle-logs.reducer';
+import { Maker as Universe } from './maker.reducer';
 
 export const rootReducer = combineReducers({
-    DarkStone,
     Messages,
     LifeCycleLogs,
-    Pokemons
+    Universe
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
