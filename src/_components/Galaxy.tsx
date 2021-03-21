@@ -46,6 +46,7 @@ class GalaxyComponent extends Component<PropsType> {
     deletePlanet = (galaxyId: number, planetId: number) => {
         const data = { galaxyId, planetId };
         this.dispatcher(GalaxyActions.DELETE_PLANET, data);
+        this.dispatcher(DarkStoneActions.CREATE_DARKSTONE);
         this.dispatcher(MessagesActions.ADD_MESSAGE, 'Planet destroyed!!');
     }
 

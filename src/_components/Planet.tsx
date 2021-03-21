@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { DarkStoneType, GalaxyType, MessagesActions, PlanetActions, PlanetType, PokemonType } from '@/_types';
+import { DarkStoneActions, DarkStoneType, GalaxyType, MessagesActions, PlanetActions, PlanetType, PokemonType } from '@/_types';
 import { Pokemon } from './Pokemon';
 import { connect } from 'react-redux';
 import { RootState } from '@/_reducer';
@@ -22,6 +22,7 @@ class PlanetComponent extends Component<PropsType> {
                 galaxyId: this.props.galaxy.id 
             };
             this.dispatcher(PlanetActions.CREATE_POKEMON, data);
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
             this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon created!!');
         }
         else {
@@ -29,13 +30,20 @@ class PlanetComponent extends Component<PropsType> {
         }
     }
     upgradePokemon = (id: number) => {
-        const data = { 
-            creatureId: id, 
-            planetId: this.props.planet.id, 
-            galaxyId: this.props.galaxy.id 
-        };
-        this.dispatcher(PlanetActions.UPGRADE_POKEMON, data);
-        this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon updated!!');
+        const darknessReady = this.selector('darkStone');
+        if(darknessReady) {
+            const data = { 
+                creatureId: id, 
+                planetId: this.props.planet.id, 
+                galaxyId: this.props.galaxy.id 
+            };
+            this.dispatcher(PlanetActions.UPGRADE_POKEMON, data);
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon updated!!');
+        }
+        else {
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Not enough darkness!!');
+        }
     }
     deletePokemon = (id: number) => {
         const data = { 
@@ -44,6 +52,7 @@ class PlanetComponent extends Component<PropsType> {
             galaxyId: this.props.galaxy.id 
         };
         this.dispatcher(PlanetActions.KILL_POKEMON, data);
+        this.dispatcher(DarkStoneActions.CREATE_DARKSTONE);
         this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon killed!!');
     }
 
@@ -88,7 +97,9 @@ class PlanetComponent extends Component<PropsType> {
 export const Planet = () => {
     if (window.location.href.indexOf('reducer') > -1) {
         const mapStateToProps = (state: RootState) => {
-            return { darkStone: state.Universe.darkStone };
+            return { 
+                darkStone: state.Universe.darkStone
+            };
         };
         const mapDispatchToProps = (dispatch: any) => {
             return { dispatch };
