@@ -167,7 +167,7 @@ export const Universe = () => {
     }
 };
 
-function animateCanvas(canvas: any) {
+async function animateCanvas(canvas: any) {
     const renderer = new THREE.WebGLRenderer({canvas, alpha: true});
 
     const fov = 45;
@@ -176,7 +176,7 @@ function animateCanvas(canvas: any) {
     const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     camera.position.set(0, 10, 20);
-    
+
     const controls = new OrbitControls(camera, canvas);
     controls.target.set(0, 5, 0);
     controls.update();
@@ -221,6 +221,27 @@ function animateCanvas(canvas: any) {
         scene.add(light.target);
     }
 
+    const planetScene: any = await loadPlanet();
+    const p2Scene: any = await loadPlanet();
+    const planet = new THREE.Object3D();
+    planet.add(planetScene.getObjectByName("Cube"));
+    scene.add(planet);
+
+    const planet2 = new THREE.Object3D();
+    planet2.add(p2Scene.children[0]);
+    scene.add(planet2);
+
+    // const box = new THREE.Box3().setFromObject(planet);
+
+    // const boxSize = box.getSize(new THREE.Vector3()).length();
+    // const boxCenter = box.getCenter(new THREE.Vector3());
+
+    // controls.maxDistance = boxSize * 10;
+    // controls.target.copy(boxCenter);
+    // controls.update();
+
+    // frameArea(boxSize * 0.5, boxSize, boxCenter, camera);
+
     // fucntion for city
     function frameArea(sizeToFitOnScreen: any, boxSize: any, boxCenter: any, camera: any) {
         const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
@@ -248,34 +269,6 @@ function animateCanvas(canvas: any) {
         camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
     }
 
-    {
-        const loader = new GLTFLoader();
-        loader.load(
-            // '/assets/3d/cube-color-uv.gltf',
-            '/assets/3d/cube-color-uv.glb',
-            // '/assets/3d/city/city.gltf',
-            (gltf) => {
-                var root = gltf.scene;
-                scene.add(root);
-
-                const box = new THREE.Box3().setFromObject(root);
-
-                const boxSize = box.getSize(new THREE.Vector3()).length();
-                const boxCenter = box.getCenter(new THREE.Vector3());
-
-                // frameArea(boxSize * 0.5, boxSize, boxCenter, camera);
-
-                controls.maxDistance = boxSize * 10;
-                controls.target.copy(boxCenter);
-                controls.update();
-            },
-            undefined,
-            (error) => {
-                console.log(error);
-            }
-        );
-    }
-
     function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
         const canvas = renderer.domElement;
         const width = canvas.clientWidth;
@@ -287,12 +280,18 @@ function animateCanvas(canvas: any) {
         return needResize;
     }
 
-    const render = function () {
+    const render = function (time: number) {
+        time *= 0.0004;  // convert to seconds
+
         if(resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
         }
+
+        
+        planet.rotation.y = time;
+        planet2.rotation.y = time + 10;
 
         renderer.render(scene, camera);
 
@@ -300,4 +299,28 @@ function animateCanvas(canvas: any) {
     };
     
     requestAnimationFrame(render);
+}
+
+async function loadPlanet() {
+    const loader = new GLTFLoader();
+    const scene = await new Promise(
+        (resolve, reject) => {
+            loader.load(
+                // '/assets/3d/cube-color-uv.gltf',
+                // '/assets/3d/cube-color-uv.glb',
+                // '/assets/3d/city/city.gltf',
+                '/assets/3d/planet-dummy-3x-origin.glb',
+                (gltf) => {
+                    resolve(gltf.scene);
+                },
+                undefined,
+                (error) => {
+                    reject(error);
+                }
+            );
+
+        }
+    );
+
+    return scene;
 }
