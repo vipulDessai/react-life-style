@@ -6,6 +6,8 @@ const app = express();
 // Serve only the static files form the bulid directory
 app.use(express.static(path.join(__dirname, 'build')));
 
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
 app.get('*', function (req, res) {
     res.sendFile(path.resolve(path.join(__dirname, 'build', 'index.html')));
 });

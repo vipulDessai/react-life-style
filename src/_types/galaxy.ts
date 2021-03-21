@@ -1,4 +1,6 @@
+import { PlanetType } from './planet';
+
 export interface GalaxyType {
     id: number,
-    darkStoneQty: number,
+    planets: PlanetType[],
 }

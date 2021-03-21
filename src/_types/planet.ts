@@ -1,4 +1,6 @@
+import { PokemonType } from './pokemon';
+
 export interface PlanetType {
     id: number,
-    food: number,
+    creatures: PokemonType[],
 }

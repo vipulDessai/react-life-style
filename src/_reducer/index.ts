@@ -1,11 +1,13 @@
 import { combineReducers } from 'redux';
 
-import { karma } from './karma.reducer';
 import { Messages } from './messages.reducer';
+import { LifeCycleLogs } from './life-cycle-logs.reducer';
+import { Maker as Universe } from './maker.reducer';
 
 export const rootReducer = combineReducers({
-    karma,
     Messages,
+    LifeCycleLogs,
+    Universe
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

@@ -1,66 +1,112 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 
-import { KarmaStateType, PlanetType, PokemonType } from '@/_types';
+import { DarkStoneActions, DarkStoneType, GalaxyType, MessagesActions, PlanetActions, PlanetType, PokemonType } from '@/_types';
 import { Pokemon } from './Pokemon';
 import { connect } from 'react-redux';
 import { RootState } from '@/_reducer';
 
 interface PropsType {
+    galaxy: GalaxyType,
     planet: PlanetType,
-    karma: KarmaStateType,
+    deletePlanet: (galaxyId: number, planetId: number) => void,
+    dispatch?: any,
+    darkStone?: DarkStoneType,
 }
 
-interface StateType {
-    pokemons: PokemonType[],
-}
-
-class PlanetComponent extends Component<PropsType, StateType> {
-    constructor(props: PropsType) {
-        super(props);
-
-        this.state = {
-            pokemons: [],
-        };
-    }
-    componentDidMount() {
-        this.getAllPokemon();
-    }
-
-    getAllPokemon = async () => {
-        const response = await axios.get('https://pokeapi.co/api/v2/pokemon/?limit=10');
-        if(response.status == 200) {
-            const pokemons = response.data.results;
-            this.setState({pokemons});
+class PlanetComponent extends Component<PropsType> {
+    createRandomPokemon = () => {
+        const darknessReady = this.selector('darkStone');
+        if(darknessReady) {
+            const data = { 
+                planetId: this.props.planet.id, 
+                galaxyId: this.props.galaxy.id 
+            };
+            this.dispatcher(PlanetActions.CREATE_POKEMON, data);
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon created!!');
         }
         else {
-            console.log(response);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Not enough darkness!!');
         }
-    } 
-    createRandomPokemon = () => {
-        // creates pokemon from fetched pokemons
+    }
+    upgradePokemon = (id: number) => {
+        const darknessReady = this.selector('darkStone');
+        if(darknessReady) {
+            const data = { 
+                creatureId: id, 
+                planetId: this.props.planet.id, 
+                galaxyId: this.props.galaxy.id 
+            };
+            this.dispatcher(PlanetActions.UPGRADE_POKEMON, data);
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon updated!!');
+        }
+        else {
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Not enough darkness!!');
+        }
+    }
+    deletePokemon = (id: number) => {
+        const data = { 
+            creatureId: id, 
+            planetId: this.props.planet.id, 
+            galaxyId: this.props.galaxy.id 
+        };
+        this.dispatcher(PlanetActions.KILL_POKEMON, data);
+        this.dispatcher(DarkStoneActions.CREATE_DARKSTONE);
+        this.dispatcher(MessagesActions.ADD_MESSAGE, 'Pokemon killed!!');
+    }
+
+    selector = (stateName: string) => {
+        return this.props.darkStone.ready;
+    }
+    dispatcher = (type: string, data?: any) => {
+        // context
+        // TODO: check if context is available properly
+        if(this.context.foo) {
+            
+        }
+        // reducer
+        else {
+            this.props.dispatch({type, data});
+        }
     }
 
     render() {
+        const { galaxy, planet, deletePlanet } = this.props;
+        const { id, creatures } = planet;
         return (
             <>
-                <li><p>Planet food: {this.props.planet.food} karma - {this.props.karma.qty}</p></li>
-                <li>
-                    <ul>
-                        {
-                            this.state.pokemons.map(
-                                pokemon => <Pokemon key={pokemon.name} pokemon={pokemon} />
-                            )
-                        }
-                    </ul>
-                </li>
+                <li>Planet - {id} Pokemons - {creatures.length} <button onClick={this.createRandomPokemon}>Create Pokemons</button><button onClick={() => deletePlanet(galaxy.id, planet.id)}>x</button></li>
+                {
+                    creatures.length > 0 && 
+                        <li>
+                            <ul>
+                                {
+                                    creatures.map(
+                                        (pokemon, index) => <Pokemon key={index} pokemon={pokemon} deletePokemon={this.deletePokemon} upgradePokemon={this.upgradePokemon} />
+                                    )
+                                }
+                            </ul>
+                        </li>
+                }
             </>
         );
     }
 }
 
-const mapStateToProps = (state: RootState) => {
-    return { karma: state.karma };
+export const Planet = () => {
+    if (window.location.href.indexOf('reducer') > -1) {
+        const mapStateToProps = (state: RootState) => {
+            return { 
+                darkStone: state.Universe.darkStone
+            };
+        };
+        const mapDispatchToProps = (dispatch: any) => {
+            return { dispatch };
+        };
+        return connect(mapStateToProps, mapDispatchToProps)(PlanetComponent);
+    }
+    else {
+        return PlanetComponent;
+    }
 };
-
-export const Planet = connect(mapStateToProps)(PlanetComponent);

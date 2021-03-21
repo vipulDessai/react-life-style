@@ -1,5 +1,5 @@
 export * from './galaxy';
 export * from './planet';
 export * from './pokemon';
-export * from './karma';
-export * from './messages';
+export * from './darkStone';
+export * from './actions';

@@ -1,11 +1,15 @@
-import { MultiverseContext } from '@/_helpers';
-import { GalaxyType, PlanetType } from '@/_types';
+import { MultiverseContext } from '@/_context';
+import { RootState } from '@/_reducer';
+import { DarkStoneActions, DarkStoneType, GalaxyActions, GalaxyType, MessagesActions, PlanetType } from '@/_types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { Planet } from './Planet';
 
 interface PropsType {
     galaxy: GalaxyType,
     destroyGalaxy: (galaxyId: number) => void;
+    darkStone?: DarkStoneType,
+    dispatch?: any, 
 }
 
 interface StateType {
@@ -13,60 +17,93 @@ interface StateType {
     planets: PlanetType[]
 }
 
-export class Galaxy extends Component<PropsType, StateType> {
-    constructor(props: PropsType) {
-        super(props);
+class GalaxyComponent extends Component<PropsType> {
+    static context = MultiverseContext;
 
-        this.state = {
-            id: null,
-            planets: []
-        };
-    }
+    PlanetComponent = Planet();
 
     shouldComponentUpdate(nextProps: PropsType, nextState: StateType):boolean {
-        // as of now allow update
+        // as of now allow update irrespectively
         return true;
     }
 
-    static getDerivedStateFromProps(props: PropsType, state: StateType) {
-        console.log('get the derived state from props');
-
-        return {
-            id: props.galaxy.id,
-            planets: [{ id: 0, food: 0 }],
-        };
+    componentDidUpdate(prevProps: PropsType, prevState: StateType) {
+        
     }
 
-    componentDidUpdate(prevProps: PropsType, prevState: StateType) {
-        console.log(`galaxy updated!! - planet count - ${prevState.planets.length}`);
+    createPlanet = (galaxyId: number) => {
+        const darknessReady = this.selector('darkStone');
+        if(darknessReady) {
+            const data = { galaxyId };
+            this.dispatcher(GalaxyActions.CREATE_PLANET, data);
+            this.dispatcher(DarkStoneActions.CONSUME_DARKSTONE);
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Planet spawned!!');
+        }
+        else {
+            this.dispatcher(MessagesActions.ADD_MESSAGE, 'Not enough darkness!!');
+        }
+    }
+    deletePlanet = (galaxyId: number, planetId: number) => {
+        const data = { galaxyId, planetId };
+        this.dispatcher(GalaxyActions.DELETE_PLANET, data);
+        this.dispatcher(DarkStoneActions.CREATE_DARKSTONE);
+        this.dispatcher(MessagesActions.ADD_MESSAGE, 'Planet destroyed!!');
+    }
+
+    selector = (stateName: string) => {
+        return this.props.darkStone.ready;
+    }
+    dispatcher = (type: string, data?: any) => {
+        // context
+        // TODO: check if context is available properly
+        if(this.context.foo) {
+            
+        }
+        // reducer
+        else {
+            this.props.dispatch({type, data});
+        }
     }
 
     render() {
+        const { galaxy, destroyGalaxy } = this.props;
+        const { planets } = galaxy;
         return (
-            <MultiverseContext.Consumer>
-                {
-                    context => {
-                        const {createEnergy, consumeEnergyCreatePlanet, energy } = context;
-
-                        return (
+            <li>
+                <ul>
+                    <li>Galaxy - {galaxy.id} <button onClick={() => this.createPlanet(galaxy.id)}>Create Planet</button><button onClick={() => destroyGalaxy(galaxy.id)}>x</button></li>
+                    {
+                        planets.length > 0 &&
                             <li>
                                 <ul>
-                                    <li>Galaxy - {this.state.id} has {energy} energy <button onClick={createEnergy}>Create Energy</button><button onClick={consumeEnergyCreatePlanet}>Create Planet</button></li>
-                                    <li>
-                                        <ul>
-                                            {
-                                                this.state.planets.map(
-                                                    planet => <Planet key={planet.id} planet={planet}></Planet>
-                                                )
-                                            }
-                                        </ul>
-                                    </li>
+                                    {
+                                        planets.map(
+                                            planet => <this.PlanetComponent key={planet.id} galaxy={galaxy} planet={planet} deletePlanet={this.deletePlanet} />
+                                        )
+                                    }
                                 </ul>
                             </li>
-                        );
                     }
-                }
-            </MultiverseContext.Consumer>
+                </ul>
+            </li>
         );
     }
 }
+
+export const Galaxy = () => {
+    if(window.location.href.indexOf('reducer') > -1) {
+        const mapStateToProps = (state: RootState) => {
+            return {
+                darkStone: state.Universe.darkStone,
+            };
+        };
+        const mapDispatchToProps = (dispatch: any) => {
+            return { dispatch };
+        };
+    
+        return connect(mapStateToProps, mapDispatchToProps)(GalaxyComponent);
+    }
+    else {
+        return GalaxyComponent;
+    }
+};

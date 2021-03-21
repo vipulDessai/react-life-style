@@ -1,26 +1,23 @@
-import { MessagesActionType } from '@/_types';
+import { MessagesActions } from '@/_types';
 
 interface State {
-    messages: string[],
+    message: string,
 }
 
 interface Action {
     type: string,
-    messageText: string,
+    data: string,
 }
 
-export function Messages(state: State = { messages: [] }, action: Action) {
+export function Messages(state: State = { message: '' }, action: Action) {
     switch (action.type) {
-        case MessagesActionType.ADD:
-            const messages = [...state.messages];
-            messages.push(action.messageText);
-            
-            return { messages };
+        case MessagesActions.ADD_MESSAGE:
+            return { message: action.data };
 
-        case MessagesActionType.DELETE:
-            return { messages: [] };
+        case MessagesActions.DELETE_MESSAGE:
+            return { message: '' };
 
         default:
-            return { messages: [] };
+            return state;
     }
 }
