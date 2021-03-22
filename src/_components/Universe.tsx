@@ -141,6 +141,7 @@ export class UniverseComponent extends Component<PropsType, StateType> {
                     galaxies.map(galaxy => <this.GalaxyComponent key={galaxy.id} galaxy={galaxy} destroyGalaxy={this.destroyGalaxy} />)
                 }
                 </ul>
+                <div id="time"></div>
                 <canvas className="canvas" ref={ref => this.canvas = ref}></canvas>
             </section>
         );
@@ -168,42 +169,21 @@ export const Universe = () => {
 };
 
 async function animateCanvas(canvas: any) {
-    const renderer = new THREE.WebGLRenderer({canvas, alpha: true});
+    const renderer = new THREE.WebGLRenderer({canvas, alpha: true, antialias: true});
 
-    const fov = 45;
+    const fov = 25;
     const aspect = 2;  // the canvas default
     const near = 0.1;
-    const far = 100;
+    const far = 1000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     camera.position.set(0, 10, 20);
 
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(0, 5, 0);
+    // similar to camera.lookAt
+    controls.target.set(0, 5, 10);
     controls.update();
 
     const scene = new THREE.Scene();
-
-    {
-        const planeSize = 40;
-
-        const loader = new THREE.TextureLoader();
-        const texture = loader.load('/assets/3d/checker.png');
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.magFilter = THREE.NearestFilter;
-        const repeats = planeSize / 2;
-        texture.repeat.set(repeats, repeats);
-
-        const planeGoe = new THREE.PlaneGeometry(planeSize, planeSize);
-        const planeMat = new THREE.MeshPhongMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-        });
-
-        const mesh = new THREE.Mesh(planeGoe, planeMat);
-        mesh.rotation.x = Math.PI * -.5;
-        // scene.add(mesh);
-    }
 
     {
         const skyColor = 0xB1E1FF;  // light blue
@@ -221,52 +201,40 @@ async function animateCanvas(canvas: any) {
         scene.add(light.target);
     }
 
-    const planetScene: any = await loadPlanet();
-    const p2Scene: any = await loadPlanet();
-    const planet = new THREE.Object3D();
-    planet.add(planetScene.getObjectByName("Cube"));
-    scene.add(planet);
-
-    const planet2 = new THREE.Object3D();
-    planet2.add(p2Scene.children[0]);
-    scene.add(planet2);
-
-    // const box = new THREE.Box3().setFromObject(planet);
-
-    // const boxSize = box.getSize(new THREE.Vector3()).length();
-    // const boxCenter = box.getCenter(new THREE.Vector3());
-
-    // controls.maxDistance = boxSize * 10;
-    // controls.target.copy(boxCenter);
-    // controls.update();
-
-    // frameArea(boxSize * 0.5, boxSize, boxCenter, camera);
-
-    // fucntion for city
-    function frameArea(sizeToFitOnScreen: any, boxSize: any, boxCenter: any, camera: any) {
-        const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
-        const halfFovY = THREE.MathUtils.degToRad(camera.fov * .5);
-        const distance = halfSizeToFitOnScreen / Math.tan(halfFovY);
-        // compute a unit vector that points in the direction the camera is now
-        // in the xz plane from the center of the box
-        const direction = (new THREE.Vector3())
-            .subVectors(camera.position, boxCenter)
-            .multiply(new THREE.Vector3(1, 0, 1))
-            .normalize();
-    
-        // move the camera to a position distance units way from the center
-        // in whatever direction the camera was from the center already
-        camera.position.copy(direction.multiplyScalar(distance).add(boxCenter));
-    
-        // pick some near and far values for the frustum that
-        // will contain the box.
-        camera.near = boxSize / 100;
-        camera.far = boxSize * 100;
-    
-        camera.updateProjectionMatrix();
-    
-        // point the camera to look at the center of the box
-        camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
+    const galaxies: GalaxyType[] = [
+        {
+            id: 0,
+            planets: [
+                {
+                    id: 0,
+                    creatures: [],
+                },
+                {
+                    id: 1,
+                    creatures: [],
+                },
+                {
+                    id: 2,
+                    creatures: [],
+                },
+                {
+                    id: 3,
+                    creatures: [],
+                }
+            ]
+        }
+    ];
+    const renderedPlanets: THREE.Object3D[] = [];
+    for (let index = 0; index < galaxies.length; ++index) {
+        const galaxy = galaxies[index];
+        const planets = galaxy.planets;
+        for (let index = 0; index < planets.length; ++index) {
+            const planetScene: any = await loadPlanet();
+            const planet = new THREE.Object3D();
+            planet.add(planetScene.getObjectByName('Cube'));
+            scene.add(planet);
+            renderedPlanets.push(planet);
+        }
     }
 
     function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
@@ -289,9 +257,12 @@ async function animateCanvas(canvas: any) {
             camera.updateProjectionMatrix();
         }
 
-        
-        planet.rotation.y = time;
-        planet2.rotation.y = time + 10;
+        for (let index = 0; index < renderedPlanets.length; index++) {
+            const planet = renderedPlanets[index];
+            planet.rotation.y = time + (index + 1)  * 11;
+        }
+
+        document.getElementById('time').innerText = time.toString();
 
         renderer.render(scene, camera);
 
@@ -323,4 +294,31 @@ async function loadPlanet() {
     );
 
     return scene;
+}
+
+// fucntion for city
+function frameArea(sizeToFitOnScreen: any, boxSize: any, boxCenter: any, camera: any) {
+    const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
+    const halfFovY = THREE.MathUtils.degToRad(camera.fov * .5);
+    const distance = halfSizeToFitOnScreen / Math.tan(halfFovY);
+    // compute a unit vector that points in the direction the camera is now
+    // in the xz plane from the center of the box
+    const direction = (new THREE.Vector3())
+        .subVectors(camera.position, boxCenter)
+        .multiply(new THREE.Vector3(1, 0, 1))
+        .normalize();
+
+    // move the camera to a position distance units way from the center
+    // in whatever direction the camera was from the center already
+    camera.position.copy(direction.multiplyScalar(distance).add(boxCenter));
+
+    // pick some near and far values for the frustum that
+    // will contain the box.
+    camera.near = boxSize / 100;
+    camera.far = boxSize * 100;
+
+    camera.updateProjectionMatrix();
+
+    // point the camera to look at the center of the box
+    camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
 }
