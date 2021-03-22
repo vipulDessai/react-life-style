@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
