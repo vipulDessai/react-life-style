@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 
 import { Galaxy } from '@/_components';
 import { Messages } from '@/_components/Messages';
@@ -169,7 +168,7 @@ export const Universe = () => {
     }
 };
 
-async function animateCanvas(canvas: any) {
+async function animateCanvas(canvas: HTMLCanvasElement) {
     const renderer = new THREE.WebGLRenderer({canvas, alpha: true, antialias: true});
 
     const fov = 25;
@@ -177,7 +176,7 @@ async function animateCanvas(canvas: any) {
     const near = 0.1;
     const far = 1000;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.set(0, 10, 20);
+    camera.position.set(0, 20, 50);
 
     const controls = new OrbitControls(camera, canvas);
     // similar to camera.lookAt
@@ -185,6 +184,27 @@ async function animateCanvas(canvas: any) {
     controls.update();
 
     const scene = new THREE.Scene();
+
+    {
+        const planeSize = 40;
+    
+        const loader = new THREE.TextureLoader();
+        const texture = loader.load('https://threejsfundamentals.org/threejs/resources/images/checker.png');
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.magFilter = THREE.NearestFilter;
+        const repeats = planeSize / 2;
+        texture.repeat.set(repeats, repeats);
+    
+        const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+        const planeMat = new THREE.MeshPhongMaterial({
+          map: texture,
+          side: THREE.DoubleSide,
+        });
+        const mesh = new THREE.Mesh(planeGeo, planeMat);
+        mesh.rotation.x = Math.PI * -.5;
+        scene.add(mesh);
+    }
 
     {
         const skyColor = 0xB1E1FF;  // light blue
@@ -201,6 +221,8 @@ async function animateCanvas(canvas: any) {
         scene.add(light);
         scene.add(light.target);
     }
+
+
 
     const galaxies: GalaxyType[] = [
         {
@@ -223,16 +245,64 @@ async function animateCanvas(canvas: any) {
                     creatures: [],
                 }
             ]
+        },
+        {
+            id: 1,
+            planets: [
+                {
+                    id: 0,
+                    creatures: [],
+                },
+                {
+                    id: 1,
+                    creatures: [],
+                },
+                {
+                    id: 2,
+                    creatures: [],
+                },
+                {
+                    id: 3,
+                    creatures: [],
+                }
+            ]
+        },
+        {
+            id: 2,
+            planets: [
+                {
+                    id: 0,
+                    creatures: [],
+                },
+                {
+                    id: 1,
+                    creatures: [],
+                },
+                {
+                    id: 2,
+                    creatures: [],
+                },
+                {
+                    id: 3,
+                    creatures: [],
+                }
+            ]
         }
     ];
     const renderedPlanets: THREE.Object3D[] = [];
-    for (let index = 0; index < galaxies.length; ++index) {
-        const galaxy = galaxies[index];
+    for (let i = 0; i < galaxies.length; ++i) {
+        const galaxy = galaxies[i];
         const planets = galaxy.planets;
-        for (let index = 0; index < planets.length; ++index) {
+        let position = {
+            x: (i * 10) - 10,
+            y: 0,
+            z: (i * 10) - 10,
+        }
+        for (let j = 0; j < planets.length; ++j) {
             const planetScene: any = await loadPlanet();
             const planet = new THREE.Object3D();
             planet.add(planetScene.getObjectByName('Cube'));
+            planet.position.set(position.x, position.y, position.z);
             scene.add(planet);
             renderedPlanets.push(planet);
         }
