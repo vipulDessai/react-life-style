@@ -222,7 +222,12 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
         scene.add(light.target);
     }
 
+    window.onresize = (e: any): void => {
+        const window = e.currentTarget;
+        // camera.aspect = Math.floor(window.innerWidth / window.innerHeight);
 
+        camera.updateProjectionMatrix();
+    };
 
     const galaxies: GalaxyType[] = [
         {
@@ -297,7 +302,7 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
             x: (i * 10) - 10,
             y: 0,
             z: (i * 10) - 10,
-        }
+        };
         for (let j = 0; j < planets.length; ++j) {
             const planetScene: any = await loadPlanet();
             const planet = new THREE.Object3D();
@@ -305,7 +310,17 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
             planet.position.set(position.x, position.y, position.z);
             scene.add(planet);
             renderedPlanets.push(planet);
+
+            const box = new THREE.Box3().setFromObject(planet);
+            const boxCenter = box.getCenter(new THREE.Vector3());
+
+            // set the camera to frame the box
+            camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
+
+            controls.target.copy(boxCenter);
+            controls.update();
         }
+        
     }
 
     function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
