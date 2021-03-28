@@ -319,6 +319,15 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
 
             controls.target.copy(boxCenter);
             controls.update();
+
+            
+            const dimensions = new THREE.Vector3().subVectors( box.max, box.min );
+            const boxGeo = new THREE.BoxBufferGeometry(dimensions.x, dimensions.y, dimensions.z);
+            const matrix = new THREE.Matrix4().setPosition(dimensions.addVectors(box.min, box.max).multiplyScalar( 0.5 ));
+            boxGeo.applyMatrix4(matrix);
+            const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+            const imagineryBox = new THREE.Mesh(boxGeo, new THREE.MeshBasicMaterial());
+            scene.add(imagineryBox);
         }
         
     }
@@ -345,7 +354,7 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
 
         for (let index = 0; index < renderedPlanets.length; index++) {
             const planet = renderedPlanets[index];
-            planet.rotation.y = time + (index + 1)  * 11;
+            // planet.rotation.y = time + (index + 1)  * 11;
         }
 
         document.getElementById('time').innerText = time.toString();
