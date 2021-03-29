@@ -185,7 +185,8 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
 
     const scene = new THREE.Scene();
 
-    {
+    // show plane
+    if(false) {
         const planeSize = 40;
     
         const loader = new THREE.TextureLoader();
@@ -224,10 +225,19 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
 
     window.onresize = (e: any): void => {
         const window = e.currentTarget;
-        // camera.aspect = Math.floor(window.innerWidth / window.innerHeight);
-
-        camera.updateProjectionMatrix();
     };
+
+    const planetOrbitNurbPath = [
+        [-4.500123, 0.257827, 1.548634],
+        [-2.561522, 0.257827, 1.548634],
+        [-0.622921, 0.257827, 1.548634],
+        [1.315679, 0.257827, 1.548634],
+        [3.254279, 0.257827, 1.548634],
+        [4.869118, 0.676552, -1.479771],
+        [3.724624, 1.009384, -3.886966],
+        [0.980967, 1.075951, -4.368408],
+        [-3.158036, 0.906314, -3.141517],
+    ];
 
     const galaxies: GalaxyType[] = [
         {
@@ -245,10 +255,6 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
                     id: 2,
                     creatures: [],
                 },
-                {
-                    id: 3,
-                    creatures: [],
-                }
             ]
         },
         {
@@ -266,10 +272,6 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
                     id: 2,
                     creatures: [],
                 },
-                {
-                    id: 3,
-                    creatures: [],
-                }
             ]
         },
         {
@@ -287,14 +289,10 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
                     id: 2,
                     creatures: [],
                 },
-                {
-                    id: 3,
-                    creatures: [],
-                }
             ]
         }
     ];
-    const renderedPlanets: THREE.Object3D[] = [];
+    const renderedGalaxies: {planetOrbitalPath: ReturnType<typeof makeCurveObject>, planetsObject: THREE.Object3D[]}[] = [];
     for (let i = 0; i < galaxies.length; ++i) {
         const galaxy = galaxies[i];
         const planets = galaxy.planets;
@@ -303,33 +301,30 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
             y: 0,
             z: (i * 10) - 10,
         };
+
+        const planetsObject: THREE.Object3D[] = [];
         for (let j = 0; j < planets.length; ++j) {
             const planetScene: any = await loadPlanet();
             const planet = new THREE.Object3D();
             planet.add(planetScene.getObjectByName('Cube'));
-            planet.position.set(position.x, position.y, position.z);
             scene.add(planet);
-            renderedPlanets.push(planet);
-
-            const box = new THREE.Box3().setFromObject(planet);
-            const boxCenter = box.getCenter(new THREE.Vector3());
-
-            // set the camera to frame the box
-            camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
-
-            controls.target.copy(boxCenter);
-            controls.update();
-
-            
-            const dimensions = new THREE.Vector3().subVectors( box.max, box.min );
-            const boxGeo = new THREE.BoxBufferGeometry(dimensions.x, dimensions.y, dimensions.z);
-            const matrix = new THREE.Matrix4().setPosition(dimensions.addVectors(box.min, box.max).multiplyScalar( 0.5 ));
-            boxGeo.applyMatrix4(matrix);
-            const edgeGeo = new THREE.EdgesGeometry(boxGeo);
-            const imagineryBox = new THREE.Mesh(boxGeo, new THREE.MeshBasicMaterial());
-            scene.add(imagineryBox);
+            planetsObject.push(planet);
         }
+
+        const planetOrbitalPath = makeCurveObject(planetOrbitNurbPath, true);
+        planetOrbitalPath.curveObject.position.set(position.x, position.y, position.z);
+        scene.add(planetOrbitalPath.curveObject);
+
+        const box = new THREE.Box3().setFromObject(planetOrbitalPath.curveObject);
+        const boxCenter = box.getCenter(new THREE.Vector3());
+
+        // set the camera to frame the box
+        camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
+
+        controls.target.copy(boxCenter);
+        controls.update();
         
+        renderedGalaxies.push({ planetOrbitalPath, planetsObject });
     }
 
     function resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer) {
@@ -343,8 +338,12 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
         return needResize;
     }
 
+    // create 2 Vector3s we can use for path calculations
+    const planetPosition = new THREE.Vector3();
+    const planetTarget = new THREE.Vector3();
+
     const render = function (time: number) {
-        time *= 0.0004;  // convert to seconds
+        time *= 0.0001;  // convert to seconds
 
         if(resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
@@ -352,9 +351,34 @@ async function animateCanvas(canvas: HTMLCanvasElement) {
             camera.updateProjectionMatrix();
         }
 
-        for (let index = 0; index < renderedPlanets.length; index++) {
-            const planet = renderedPlanets[index];
-            // planet.rotation.y = time + (index + 1)  * 11;
+        const pathTime = time;
+        const targetOffset = 0.01;
+        for (let i = 0; i < renderedGalaxies.length; ++i) {
+            const galaxy = renderedGalaxies[i];
+            const planets = galaxy.planetsObject;
+            const planetOrbitalPath = galaxy.planetOrbitalPath;
+
+            for (let j = 0; j < planets.length; ++j) {
+                const planet = planets[j];
+                // a number between 0 and 1 to evenly space the cars
+                const u = pathTime + j / planets.length;
+
+                // get the first point
+                planetOrbitalPath.curve.getPointAt(u % 1, planetPosition);
+                planetPosition.applyMatrix4(planetOrbitalPath.curveObject.matrixWorld);
+
+                // get a second point slightly further down the curve
+                planetOrbitalPath.curve.getPointAt((u + targetOffset) % 1, planetTarget);
+                planetTarget.applyMatrix4(planetOrbitalPath.curveObject.matrixWorld);
+
+                // put the planet at the first point (temporarily)
+                planet.position.copy(planetPosition);
+                // point the planet the second point
+                planet.lookAt(planetTarget);
+
+                // put the planet between the 2 points
+                planet.position.lerpVectors(planetPosition, planetTarget, 0.5);
+            }
         }
 
         document.getElementById('time').innerText = time.toString();
@@ -373,9 +397,9 @@ async function loadPlanet() {
         (resolve, reject) => {
             loader.load(
                 // '/assets/3d/cube-color-uv.gltf',
-                // '/assets/3d/cube-color-uv.glb',
+                '/assets/3d/cube-color-uv.glb',
                 // '/assets/3d/city/city.gltf',
-                '/assets/3d/planet-dummy-3x-origin.glb',
+                // '/assets/3d/planet-dummy-3x-origin.glb',
                 (gltf) => {
                     resolve(gltf.scene);
                 },
@@ -416,4 +440,56 @@ function frameArea(sizeToFitOnScreen: any, boxSize: any, boxCenter: any, camera:
 
     // point the camera to look at the center of the box
     camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
+}
+
+// make curve object from .obj curve array
+function makeCurveObject (nurbPath: number[][], showCurve: boolean) {
+    const curve = new THREE.CatmullRomCurve3(
+        simpleCurvePath(nurbPath),
+        true,
+    );
+
+    const points = curve.getPoints(250);
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    const curveObject = new THREE.Line(geometry, material);
+
+    // settings to show the curve object
+    if(showCurve) {
+        material.depthTest = false;
+        curveObject.renderOrder = 1;
+    }
+
+    return { curve, curveObject };
+}
+function sharpenCurvePath(nurbPath: number[][]) {
+    return nurbPath.map(
+        (p, ndx) => {
+            const p0 = new THREE.Vector3(p[0], p[1], p[2]);
+
+            const p1DimensionSet = nurbPath[(ndx + 1) % nurbPath.length];
+            const p1 = new THREE.Vector3(p1DimensionSet[0], p1DimensionSet[1], p1DimensionSet[2]);
+
+            return [
+                (new THREE.Vector3()).copy(p0),
+                (new THREE.Vector3()).lerpVectors(p0, p1, 0.5),
+                (new THREE.Vector3()).lerpVectors(p0, p1, 0.5),
+            ];
+        }
+    ).flat();
+}
+function simpleCurvePath(nurbPath: number[][]) {
+    return nurbPath.map(
+        p => new THREE.Vector3(p[0], p[1], p[2])
+    )
+}
+
+// create a cube with only edges or lines
+function createEdgeBox(boxVector: THREE.Box3) {
+    const dimensions = new THREE.Vector3().subVectors( boxVector.max, boxVector.min );
+    const boxGeo = new THREE.BoxBufferGeometry(dimensions.x, dimensions.y, dimensions.z);
+    const matrix = new THREE.Matrix4().setPosition(dimensions.addVectors(boxVector.min, boxVector.max).multiplyScalar( 0.5 ));
+    boxGeo.applyMatrix4(matrix);
+    const edgeGeo = new THREE.EdgesGeometry(boxGeo);
+    return new THREE.LineSegments(edgeGeo, new THREE.LineBasicMaterial( { color: 0xffffff } ));
 }

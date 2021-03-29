@@ -5,7 +5,7 @@
       "esModuleInterop": true,
       "outDir": "./build/",
       "sourceMap": true,
-      "target": "es5",
+      "target": "ES2019",
       "module": "es6",
       "moduleResolution": "node",
       "baseUrl": "./src",
